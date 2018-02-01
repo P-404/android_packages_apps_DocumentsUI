@@ -19,6 +19,7 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := \
         src/com/android/documentsui/ScopedAccessActivity.java \
         src/com/android/documentsui/ScopedAccessPackageReceiver.java \
+        src/com/android/documentsui/ScopedAccessProvider.java \
         src/com/android/documentsui/ScopedAccessMetrics.java \
         src/com/android/documentsui/archives/Archive.java \
         src/com/android/documentsui/archives/ArchiveId.java \
@@ -28,6 +29,7 @@ LOCAL_SRC_FILES := \
         src/com/android/documentsui/archives/ReadableArchive.java \
         src/com/android/documentsui/archives/WriteableArchive.java \
         src/com/android/documentsui/base/Providers.java \
+        src/com/android/documentsui/base/SharedMinimal.java \
         src/com/android/documentsui/prefs/ScopedAccessLocalPreferences.java
 
 LOCAL_PACKAGE_NAME := DocumentsUIMinimal
