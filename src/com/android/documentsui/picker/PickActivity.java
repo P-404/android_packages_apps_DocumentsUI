@@ -28,7 +28,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.DocumentsContract;
-import android.support.annotation.CallSuper;
+import androidx.annotation.CallSuper;
 import android.view.KeyEvent;
 import android.view.Menu;
 
@@ -134,7 +134,8 @@ public class PickActivity extends BaseActivity implements ActionHandler.Addons {
                         mInjector.selectionMgr,
                         mInjector.searchManager::cancelSearch,
                         this::popDir,
-                        mInjector.features);
+                        mInjector.features,
+                        mDrawer);
         setupLayout(intent);
         mInjector.actions.initLocation(intent);
     }

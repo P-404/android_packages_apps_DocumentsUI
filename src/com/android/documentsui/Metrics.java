@@ -19,8 +19,8 @@ package com.android.documentsui;
 import static com.android.documentsui.DocumentsApplication.acquireUnstableProviderOrThrow;
 import static com.android.documentsui.base.SharedMinimal.DEBUG;
 
-import android.annotation.IntDef;
-import android.annotation.Nullable;
+import androidx.annotation.IntDef;
+import androidx.annotation.Nullable;
 import android.content.ContentProviderClient;
 import android.content.Context;
 import android.content.Intent;
@@ -756,7 +756,11 @@ public final class Metrics {
 
         switch (uri.getAuthority()) {
             case Providers.AUTHORITY_MEDIA:
-                switch (DocumentsContract.getRootId(uri)) {
+                String rootId = getRootIdSafely(uri);
+                if (rootId == null) {
+                    return ROOT_NONE;
+                }
+                switch (rootId) {
                     case Providers.ROOT_ID_AUDIO:
                         return ROOT_AUDIO;
                     case Providers.ROOT_ID_IMAGES:
@@ -767,7 +771,11 @@ public final class Metrics {
                         return ROOT_OTHER;
                 }
             case Providers.AUTHORITY_STORAGE:
-                if (Providers.ROOT_ID_HOME.equals(DocumentsContract.getRootId(uri))) {
+                rootId = getRootIdSafely(uri);
+                if (rootId == null) {
+                    return ROOT_NONE;
+                }
+                if (Providers.ROOT_ID_HOME.equals(rootId)) {
                     return ROOT_HOME;
                 } else {
                     return ROOT_DEVICE_STORAGE;
@@ -970,5 +978,14 @@ public final class Metrics {
         int intraProvider;
         int systemProvider;
         int externalProvider;
+    }
+
+    private static String getRootIdSafely(Uri uri) {
+        try {
+            return DocumentsContract.getRootId(uri);
+        } catch (IllegalArgumentException iae) {
+            Log.w(TAG, "Invalid root Uri " + uri.toSafeString());
+        }
+        return null;
     }
 }

@@ -16,10 +16,10 @@
 
 package com.android.documentsui.sorting;
 
-import android.annotation.IntDef;
+import androidx.annotation.IntDef;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.support.annotation.StringRes;
+import androidx.annotation.StringRes;
 import android.view.View;
 
 import java.lang.annotation.Retention;

@@ -140,7 +140,6 @@ public final class MenuManagerTest {
         rootSettings = testMenu.findItem(R.id.root_menu_settings);
 
         // Menu actions (including overflow) when action mode *is* active.
-        actionModeOpen = testMenu.findItem(R.id.action_menu_open);
         actionModeOpenWith = testMenu.findItem(R.id.action_menu_open_with);
         actionModeShare = testMenu.findItem(R.id.action_menu_share);
         actionModeDelete = testMenu.findItem(R.id.action_menu_delete);
@@ -567,8 +566,7 @@ public final class MenuManagerTest {
     public void testContextMenu_OnFile() {
         selectionDetails.size = 1;
         mgr.updateContextMenuForFiles(testMenu, selectionDetails);
-        dirOpen.assertVisible();
-        dirOpen.assertEnabled();
+        dirOpen.assertInvisible();
         dirCutToClipboard.assertVisible();
         dirCopyToClipboard.assertVisible();
         dirRename.assertVisible();
@@ -596,8 +594,7 @@ public final class MenuManagerTest {
     public void testContextMenu_OnMultipleFiles() {
         selectionDetails.size = 3;
         mgr.updateContextMenuForFiles(testMenu, selectionDetails);
-        dirOpen.assertVisible();
-        dirOpen.assertDisabled();
+        dirOpen.assertInvisible();
     }
 
     @Test

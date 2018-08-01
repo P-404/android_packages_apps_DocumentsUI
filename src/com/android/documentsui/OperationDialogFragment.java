@@ -16,7 +16,7 @@
 
 package com.android.documentsui;
 
-import android.annotation.IntDef;
+import androidx.annotation.IntDef;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.FragmentManager;
@@ -24,7 +24,7 @@ import android.app.FragmentTransaction;
 import android.content.DialogInterface;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v7.app.AlertDialog;
+import androidx.appcompat.app.AlertDialog;
 import android.text.Html;
 
 import com.android.documentsui.base.DocumentInfo;

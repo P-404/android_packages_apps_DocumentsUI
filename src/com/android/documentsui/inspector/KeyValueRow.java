@@ -15,12 +15,12 @@
  */
 package com.android.documentsui.inspector;
 
-import android.annotation.StringRes;
+import androidx.annotation.StringRes;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.content.res.Resources;
 import android.graphics.Paint;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import android.text.Selection;
 import android.text.Spannable;
 import android.util.AttributeSet;

@@ -16,13 +16,14 @@
 
 package com.android.documentsui.selection;
 
-import static android.support.v4.util.Preconditions.checkArgument;
+import static androidx.core.util.Preconditions.checkArgument;
+import static com.android.documentsui.base.SharedMinimal.DEBUG;
 
 import android.graphics.Point;
 import android.graphics.Rect;
-import android.support.annotation.VisibleForTesting;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.RecyclerView.OnScrollListener;
+import androidx.annotation.VisibleForTesting;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.RecyclerView.OnScrollListener;
 import android.util.Log;
 import android.util.SparseArray;
 import android.util.SparseBooleanArray;
@@ -324,7 +325,7 @@ final class GridModel {
     private void updateSelection(
             int columnStartIndex, int columnEndIndex, int rowStartIndex, int rowEndIndex) {
 
-        if (BandSelectionHelper.DEBUG) {
+        if (DEBUG) {
             Log.d(BandSelectionHelper.TAG, String.format(
                     "updateSelection: %d, %d, %d, %d",
                     columnStartIndex, columnEndIndex, rowStartIndex, rowEndIndex));

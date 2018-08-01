@@ -32,7 +32,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.DocumentsContract;
 import android.provider.DocumentsContract.Document;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -147,7 +147,7 @@ public class CreateDirectoryFragment extends DialogFragment {
                 Log.w(TAG, "Failed to create directory", e);
                 return null;
             } finally {
-                ContentProviderClient.releaseQuietly(client);
+                ContentProviderClient.closeQuietly(client);
             }
         }
 

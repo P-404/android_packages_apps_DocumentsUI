@@ -20,7 +20,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.DocumentsContract;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import android.util.Log;
 
 import java.io.FileNotFoundException;
@@ -47,7 +47,7 @@ final class MetadataLoader extends AsyncTaskLoader<Bundle> {
     public Bundle loadInBackground() {
         try {
             return DocumentsContract.getDocumentMetadata(mContext.getContentResolver(), mUri);
-        } catch (FileNotFoundException e) {
+        } catch (FileNotFoundException | RuntimeException e) {
             Log.e(TAG, "Failed to load metadata for doc: " + mUri, e);
         }
 

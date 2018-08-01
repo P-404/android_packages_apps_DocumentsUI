@@ -20,7 +20,7 @@ import static com.android.documentsui.base.DocumentInfo.getCursorString;
 import static com.android.documentsui.base.SharedMinimal.DEBUG;
 import static com.android.documentsui.base.SharedMinimal.VERBOSE;
 
-import android.annotation.IntDef;
+import androidx.annotation.IntDef;
 import android.app.AuthenticationRequiredException;
 import android.database.Cursor;
 import android.database.MergeCursor;
@@ -28,8 +28,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.DocumentsContract;
 import android.provider.DocumentsContract.Document;
-import android.support.annotation.Nullable;
-import android.support.annotation.VisibleForTesting;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 import android.util.Log;
 
 import com.android.documentsui.DirectoryResult;

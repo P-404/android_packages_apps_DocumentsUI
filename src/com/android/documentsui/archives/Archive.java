@@ -28,15 +28,15 @@ import android.os.storage.StorageManager;
 import android.provider.DocumentsContract;
 import android.provider.MetadataReader;
 import android.provider.DocumentsContract.Document;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import android.system.ErrnoException;
 import android.system.Os;
 import android.system.OsConstants;
 import android.text.TextUtils;
 import android.webkit.MimeTypeMap;
 
-import com.android.internal.annotations.GuardedBy;
-import com.android.internal.util.Preconditions;
+import androidx.annotation.GuardedBy;
+import androidx.core.util.Preconditions;
 
 import java.io.Closeable;
 import java.io.File;

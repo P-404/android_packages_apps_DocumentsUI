@@ -15,7 +15,7 @@
  */
 package com.android.documentsui.inspector;
 
-import static com.android.internal.util.Preconditions.checkArgument;
+import static androidx.core.util.Preconditions.checkArgument;
 
 import android.app.LoaderManager;
 import android.app.LoaderManager.LoaderCallbacks;
@@ -28,7 +28,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.DocumentsContract;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import com.android.documentsui.base.DocumentInfo;
 import com.android.documentsui.inspector.InspectorController.DataSupplier;

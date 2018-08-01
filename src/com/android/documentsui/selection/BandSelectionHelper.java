@@ -16,17 +16,18 @@
 
 package com.android.documentsui.selection;
 
-import static android.support.v4.util.Preconditions.checkArgument;
-import static android.support.v4.util.Preconditions.checkState;
+import static androidx.core.util.Preconditions.checkArgument;
+import static androidx.core.util.Preconditions.checkState;
+import static com.android.documentsui.base.SharedMinimal.DEBUG;
 
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.Build;
-import android.support.annotation.Nullable;
-import android.support.annotation.VisibleForTesting;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.RecyclerView.OnItemTouchListener;
-import android.support.v7.widget.RecyclerView.OnScrollListener;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.RecyclerView.OnItemTouchListener;
+import androidx.recyclerview.widget.RecyclerView.OnScrollListener;
 import android.util.Log;
 import android.view.MotionEvent;
 
@@ -52,7 +53,6 @@ import java.util.Set;
  */
 public class BandSelectionHelper implements OnItemTouchListener {
 
-    static final boolean DEBUG = false;
     static final String TAG = "BandController";
 
     private final BandHost mHost;
@@ -170,7 +170,7 @@ public class BandSelectionHelper implements OnItemTouchListener {
     @VisibleForTesting
     boolean isActive() {
         boolean active = mModel != null;
-        if (Build.IS_DEBUGGABLE && active) {
+        if (DEBUG && active) {
             mLock.checkLocked();
         }
         return active;

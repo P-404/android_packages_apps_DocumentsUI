@@ -37,7 +37,7 @@ import android.os.Handler;
 import android.os.SystemClock;
 import android.provider.DocumentsContract;
 import android.provider.DocumentsContract.Root;
-import android.support.v4.content.LocalBroadcastManager;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.android.documentsui.DocumentsApplication;
@@ -46,12 +46,12 @@ import com.android.documentsui.archives.ArchivesProvider;
 import com.android.documentsui.base.Providers;
 import com.android.documentsui.base.RootInfo;
 import com.android.documentsui.base.State;
-import com.android.internal.annotations.GuardedBy;
+import androidx.annotation.GuardedBy;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
-import libcore.io.IoUtils;
+import android.os.FileUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -311,8 +311,8 @@ public class ProvidersCache implements ProvidersAccess {
             // if forceRefresh is false.
             return roots;
         } finally {
-            IoUtils.closeQuietly(cursor);
-            ContentProviderClient.releaseQuietly(client);
+            FileUtils.closeQuietly(cursor);
+            ContentProviderClient.closeQuietly(client);
         }
 
         // Cache these freshly parsed roots over in the long-lived system

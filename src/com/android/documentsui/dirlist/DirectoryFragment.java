@@ -22,9 +22,9 @@ import static com.android.documentsui.base.SharedMinimal.VERBOSE;
 import static com.android.documentsui.base.State.MODE_GRID;
 import static com.android.documentsui.base.State.MODE_LIST;
 
-import android.annotation.DimenRes;
-import android.annotation.FractionRes;
-import android.annotation.IntDef;
+import androidx.annotation.DimenRes;
+import androidx.annotation.FractionRes;
+import androidx.annotation.IntDef;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.Fragment;
@@ -40,13 +40,13 @@ import android.os.Handler;
 import android.os.Parcelable;
 import android.provider.DocumentsContract;
 import android.provider.DocumentsContract.Document;
-import android.support.annotation.Nullable;
-import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.GridLayoutManager.SpanSizeLookup;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.RecyclerView.RecyclerListener;
-import android.support.v7.widget.RecyclerView.ViewHolder;
+import androidx.annotation.Nullable;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.GridLayoutManager.SpanSizeLookup;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.RecyclerView.RecyclerListener;
+import androidx.recyclerview.widget.RecyclerView.ViewHolder;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.ContextMenu;
@@ -64,6 +64,7 @@ import com.android.documentsui.ActionModeController;
 import com.android.documentsui.BaseActivity;
 import com.android.documentsui.BaseActivity.RetainedState;
 import com.android.documentsui.DocumentsApplication;
+import com.android.documentsui.DragHoverListener;
 import com.android.documentsui.FocusManager;
 import com.android.documentsui.Injector;
 import com.android.documentsui.Injector.ContentScoped;
@@ -390,7 +391,7 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
         // on RecyclerView items.
         mKeyListener = handlers.createKeyHandler();
 
-        if (Build.IS_DEBUGGABLE) {
+        if (DEBUG) {
             new ScaleHelper(this.getContext(), mInjector.features, this::scaleLayout)
                     .attach(mRecView);
         }
@@ -564,7 +565,7 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
      * @param mode The new view mode.
      */
     private void scaleLayout(float scale) {
-        assert Build.IS_DEBUGGABLE;
+        assert DEBUG;
 
         if (VERBOSE) Log.v(
                 TAG, "Handling scale event: " + scale + ", existing scale: " + mLiveScale);
@@ -638,7 +639,7 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
         mSelectionMgr.copySelection(selection);
 
         switch (item.getItemId()) {
-            case R.id.action_menu_open:
+            case R.id.action_menu_select:
             case R.id.dir_menu_open:
                 openDocuments(selection);
                 mActionModeController.finishActionMode();

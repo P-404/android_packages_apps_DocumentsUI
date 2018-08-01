@@ -31,7 +31,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.provider.DocumentsContract;
 import android.provider.DocumentsContract.Document;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.Range;
@@ -154,12 +154,11 @@ public final class QuickViewIntentBuilder {
 
         // Allow users of debug devices to override default quick viewer
         // for the purposes of testing.
-        if (Build.IS_DEBUGGABLE) {
+        if (DEBUG) {
             String quickViewer = DebugFlags.getQuickViewer();
             if (quickViewer != null) {
                 return quickViewer;
             }
-            return android.os.SystemProperties.get("debug.quick_viewer", resValue);
         }
         return resValue;
     }
