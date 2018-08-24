@@ -98,7 +98,7 @@ public class FilesActivity extends BaseActivity implements ActionHandler.Addons 
         super.onCreate(icicle);
 
         DocumentClipper clipper = DocumentsApplication.getDocumentClipper(this);
-        mInjector.selectionMgr = DocsSelectionHelper.createMultiSelect();
+        mInjector.selectionMgr = DocsSelectionHelper.create();
 
         mInjector.focusManager = new FocusManager(
                 mInjector.features,
@@ -262,6 +262,12 @@ public class FilesActivity extends BaseActivity implements ActionHandler.Addons 
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        mInjector.actions.dismissDeletionSnackBar();
+    }
+
+    @Override
     public String getDrawerTitle() {
         Intent intent = getIntent();
         return (intent != null && intent.hasExtra(Intent.EXTRA_TITLE))
@@ -338,6 +344,11 @@ public class FilesActivity extends BaseActivity implements ActionHandler.Addons 
     public void onDirectoryCreated(DocumentInfo doc) {
         assert(doc.isDirectory());
         mInjector.focusManager.focusDocument(doc.documentId);
+    }
+
+    @Override
+    protected boolean canInspectDirectory() {
+        return getCurrentDirectory() != null && mInjector.getModel().doc != null;
     }
 
     @CallSuper

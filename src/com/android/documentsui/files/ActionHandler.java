@@ -25,11 +25,15 @@ import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Build;
 import android.provider.DocumentsContract;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.DragEvent;
+import android.view.View;
+
+import androidx.recyclerview.selection.ItemDetailsLookup.ItemDetails;
+import androidx.recyclerview.selection.MutableSelection;
+import androidx.recyclerview.selection.Selection;
 
 import com.android.documentsui.AbstractActionHandler;
 import com.android.documentsui.ActionModeAddons;
@@ -42,8 +46,6 @@ import com.android.documentsui.Metrics;
 import com.android.documentsui.Model;
 import com.android.documentsui.R;
 import com.android.documentsui.TimeoutTask;
-import com.android.documentsui.base.ConfirmationCallback;
-import com.android.documentsui.base.ConfirmationCallback.Result;
 import com.android.documentsui.base.DebugFlags;
 import com.android.documentsui.base.DocumentFilters;
 import com.android.documentsui.base.DocumentInfo;
@@ -62,18 +64,19 @@ import com.android.documentsui.files.ActionHandler.Addons;
 import com.android.documentsui.inspector.InspectorActivity;
 import com.android.documentsui.queries.SearchViewManager;
 import com.android.documentsui.roots.ProvidersAccess;
-import com.android.documentsui.selection.MutableSelection;
-import com.android.documentsui.selection.Selection;
-import com.android.documentsui.selection.ItemDetailsLookup.ItemDetails;
 import com.android.documentsui.services.FileOperation;
 import com.android.documentsui.services.FileOperationService;
 import com.android.documentsui.services.FileOperations;
 import com.android.documentsui.ui.DialogController;
+import com.android.documentsui.ui.Snackbars;
+
 import androidx.annotation.VisibleForTesting;
+import android.support.design.widget.Snackbar;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
+import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
 
@@ -92,6 +95,8 @@ public class ActionHandler<T extends Activity & Addons> extends AbstractActionHa
     private final ClipStore mClipStore;
     private final DragAndDropManager mDragAndDropManager;
     private final Model mModel;
+
+    private Snackbar mDeletionSnackbar;
 
     ActionHandler(
             T activity,
@@ -136,7 +141,7 @@ public class ActionHandler<T extends Activity & Addons> extends AbstractActionHa
 
     @Override
     public void openSelectedInNewWindow() {
-        Selection selection = getStableSelection();
+        Selection<String> selection = getStableSelection();
         assert(selection.size() == 1);
         DocumentInfo doc = mModel.getDocument(selection.iterator().next());
         assert(doc != null);
@@ -190,12 +195,12 @@ public class ActionHandler<T extends Activity & Addons> extends AbstractActionHa
     }
 
     @Override
-    public boolean openItem(ItemDetails details, @ViewType int type,
+    public boolean openItem(ItemDetails<String> details, @ViewType int type,
             @ViewType int fallback) {
-        DocumentInfo doc = mModel.getDocument(details.getStableId());
+        DocumentInfo doc = mModel.getDocument(details.getSelectionKey());
         if (doc == null) {
-            Log.w(TAG,
-                    "Can't view item. No Document available for modeId: " + details.getStableId());
+            Log.w(TAG, "Can't view item. No Document available for modeId: "
+                    + details.getSelectionKey());
             return false;
         }
 
@@ -220,8 +225,8 @@ public class ActionHandler<T extends Activity & Addons> extends AbstractActionHa
         openContainerDocument(doc);
     }
 
-    private Selection getSelectedOrFocused() {
-        final MutableSelection selection = this.getStableSelection();
+    private Selection<String> getSelectedOrFocused() {
+        final MutableSelection<String> selection = this.getStableSelection();
         if (selection.isEmpty()) {
             String focusModelId = mFocusHandler.getFocusModelId();
             if (focusModelId != null) {
@@ -235,7 +240,7 @@ public class ActionHandler<T extends Activity & Addons> extends AbstractActionHa
     @Override
     public void cutToClipboard() {
         Metrics.logUserAction(mActivity, Metrics.USER_ACTION_CUT_CLIPBOARD);
-        Selection selection = getSelectedOrFocused();
+        Selection<String> selection = getSelectedOrFocused();
 
         if (selection.isEmpty()) {
             return;
@@ -256,7 +261,7 @@ public class ActionHandler<T extends Activity & Addons> extends AbstractActionHa
     @Override
     public void copyToClipboard() {
         Metrics.logUserAction(mActivity, Metrics.USER_ACTION_COPY_CLIPBOARD);
-        Selection selection = getSelectedOrFocused();
+        Selection<String> selection = getSelectedOrFocused();
 
         if (selection.isEmpty()) {
             return;
@@ -271,7 +276,7 @@ public class ActionHandler<T extends Activity & Addons> extends AbstractActionHa
     @Override
     public void viewInOwner() {
         Metrics.logUserAction(mActivity, Metrics.USER_ACTION_VIEW_IN_APPLICATION);
-        Selection selection = getSelectedOrFocused();
+        Selection<String> selection = getSelectedOrFocused();
 
         if (selection.isEmpty() || selection.size() > 1) {
             return;
@@ -293,7 +298,7 @@ public class ActionHandler<T extends Activity & Addons> extends AbstractActionHa
     @Override
     public void deleteSelectedDocuments() {
         Metrics.logUserAction(mActivity, Metrics.USER_ACTION_DELETE);
-        Selection selection = getSelectedOrFocused();
+        Selection<String> selection = getSelectedOrFocused();
 
         if (selection.isEmpty()) {
             return;
@@ -301,51 +306,64 @@ public class ActionHandler<T extends Activity & Addons> extends AbstractActionHa
 
         final @Nullable DocumentInfo srcParent = mState.stack.peek();
 
-        // Model must be accessed in UI thread, since underlying cursor is not threadsafe.
-        List<DocumentInfo> docs = mModel.getDocuments(selection);
-
-        ConfirmationCallback result = (@Result int code) -> {
-            // share the news with our caller, be it good or bad.
-            mActionModeAddons.finishOnConfirmed(code);
-
-            if (code != ConfirmationCallback.CONFIRM) {
-                return;
-            }
-
-            UrisSupplier srcs;
-            try {
-                srcs = UrisSupplier.create(
-                        selection,
-                        mModel::getItemUri,
-                        mClipStore);
-            } catch (Exception e) {
-                Log.e(TAG,"Failed to delete a file because we were unable to get item URIs.", e);
-                mDialogs.showFileOperationStatus(
-                        FileOperations.Callback.STATUS_FAILED,
-                        FileOperationService.OPERATION_DELETE,
-                        selection.size());
-                return;
-            }
-
-            FileOperation operation = new FileOperation.Builder()
-                    .withOpType(FileOperationService.OPERATION_DELETE)
-                    .withDestination(mState.stack)
-                    .withSrcs(srcs)
-                    .withSrcParent(srcParent == null ? null : srcParent.derivedUri)
-                    .build();
-
-            FileOperations.start(mActivity, operation, mDialogs::showFileOperationStatus,
-                    FileOperations.createJobId());
+        UrisSupplier srcs;
+        try {
+            srcs = UrisSupplier.create(
+                    selection,
+                    mModel::getItemUri,
+                    mClipStore);
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to delete a file because we were unable to get item URIs.", e);
+            mDialogs.showFileOperationStatus(
+                    FileOperations.Callback.STATUS_FAILED,
+                    FileOperationService.OPERATION_DELETE,
+                    selection.size());
+            return;
+        }
+        mModel.markDocumentsToBeDeleted(selection);
+        Consumer<View> action = v -> {
+            Metrics.logUserAction(mActivity, Metrics.USER_ACTION_UNDO_DELETE);
+            mModel.restoreDocumentsToBeDeleted(selection);
         };
+        Snackbar.Callback callback = new Snackbar.Callback() {
+            @Override
+            public void onDismissed(Snackbar snackbar, int event) {
+                super.onDismissed(snackbar, event);
+                if (event != Snackbar.Callback.DISMISS_EVENT_ACTION) {
+                    FileOperation operation = new FileOperation.Builder()
+                            .withOpType(FileOperationService.OPERATION_DELETE)
+                            .withDestination(mState.stack)
+                            .withSrcs(srcs)
+                            .withSrcParent(srcParent == null ? null : srcParent.derivedUri)
+                            .build();
 
-        mDialogs.confirmDelete(docs, result);
+                    FileOperations.start(mActivity, operation, null,
+                            FileOperations.createJobId());
+                }
+                if (mDeletionSnackbar == snackbar) {
+                    mDeletionSnackbar = null;
+                }
+            }
+        };
+        mDeletionSnackbar = showDeletionSnackbar(mActivity, selection.size(), action, callback);
+    }
+
+    public Snackbar showDeletionSnackbar(Activity activity, int docCount, Consumer<View> action,
+                               Snackbar.Callback callback) {
+        return Snackbars.showDelete(mActivity, docCount, action, callback);
+    }
+
+    public void dismissDeletionSnackBar() {
+        if (mDeletionSnackbar != null) {
+            mDeletionSnackbar.dismiss();
+        }
     }
 
     @Override
     public void shareSelectedDocuments() {
         Metrics.logUserAction(mActivity, Metrics.USER_ACTION_SHARE);
 
-        Selection selection = getStableSelection();
+        Selection<String> selection = getStableSelection();
 
         assert(!selection.isEmpty());
 
@@ -391,6 +409,12 @@ public class ActionHandler<T extends Activity & Addons> extends AbstractActionHa
                 intent, mActivity.getResources().getText(R.string.share_via));
 
         mActivity.startActivity(chooserIntent);
+    }
+
+    @Override
+    public void loadDocumentsForCurrentStack() {
+        dismissDeletionSnackBar();
+        super.loadDocumentsForCurrentStack();
     }
 
     @Override
