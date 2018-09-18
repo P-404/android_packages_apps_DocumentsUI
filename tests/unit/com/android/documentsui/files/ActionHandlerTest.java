@@ -42,7 +42,6 @@ import android.net.Uri;
 import android.os.Parcelable;
 import android.provider.DocumentsContract;
 import android.provider.DocumentsContract.Path;
-import android.support.design.widget.Snackbar;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.filters.MediumTest;
 import android.support.test.runner.AndroidJUnit4;
@@ -50,7 +49,10 @@ import android.util.Pair;
 import android.view.DragEvent;
 import android.view.View;
 
+import com.google.android.material.snackbar.Snackbar;
+
 import com.android.documentsui.AbstractActionHandler;
+import com.android.documentsui.ModelId;
 import com.android.documentsui.R;
 import com.android.documentsui.TestActionModeAddons;
 import com.android.documentsui.archives.ArchivesProvider;
@@ -525,7 +527,8 @@ public class ActionHandlerTest {
     public void testRefresh() throws Exception {
         refreshAnswer = false;
         mEnv.populateStack();
-        mHandler.refreshDocument(mEnv.model.getDocument("1"), (boolean answer) -> {
+        mHandler.refreshDocument(mEnv.model.getDocument(
+                ModelId.build(TestProvidersAccess.HOME.authority, "1")), (boolean answer) -> {
             refreshAnswer = answer;
         });
 
