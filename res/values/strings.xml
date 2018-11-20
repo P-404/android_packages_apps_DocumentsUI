@@ -59,6 +59,8 @@
     <string name="menu_select_all">Select all</string>
     <!-- Menu item title that selects documents in the current directory [CHAR LIMIT=28] -->
     <string name="menu_select">Select</string>
+    <!-- Menu item title that sort documents in the current directory [CHAR LIMIT=28] -->
+    <string name="menu_sort">Sort by...</string>
     <!-- Menu item title that copies the selected documents [CHAR LIMIT=28] -->
     <string name="menu_copy">Copy to\u2026</string>
     <!-- Menu item title that moves the selected documents [CHAR LIMIT=28] -->
@@ -151,6 +153,9 @@
     <string name="sort_direction_ascending">Ascending</string>
     <!-- content description to describe descending sorting used with downward arrow in table header. -->
     <string name="sort_direction_descending">Descending</string>
+
+    <!-- content description to describe the action icon to open the app on the root item. -->
+    <string name="open_external_app">Open <xliff:g id="appName" example="Drive">%1$s</xliff:g></string>
 
     <!-- Accessibility title to open the drawer showing all roots where documents can be stored [CHAR LIMIT=32] -->
     <string name="drawer_open">Show roots</string>
@@ -325,8 +330,6 @@
     <!-- Text in an alert dialog asking user to grant app access to all data in an external storage volume -->
     <string name="open_external_dialog_root_request">Grant <xliff:g id="appName" example="System Settings"><b>^1</b></xliff:g>
         access to your data, including photos and videos, on <xliff:g id="storage" example="SD Card"><i>^2</i></xliff:g>?</string>
-    <!-- Checkbox that allows user to not be questioned about the directory access request again -->
-    <string name="never_ask_again">Don\'t ask again</string>
     <!-- Text in the button asking user to allow access to a given directory. -->
     <string name="allow">Allow</string>
     <!-- Text in the button asking user to deny access to a given directory. -->
@@ -390,4 +393,10 @@
 
     <!-- Button for continuing a file operation in background, eg. copying, moving or extracting. [CHAR LIMIT=48] -->
     <string name="continue_in_background">Continue in background</string>
+
+    <!-- Label describing the number of selected items [CHAR LIMIT=48] -->
+    <plurals name="selected_count">
+        <item quantity="one"><xliff:g id="count" example="1">%1$d</xliff:g> selected</item>
+        <item quantity="other"><xliff:g id="count" example="3">%1$d</xliff:g> selected</item>
+    </plurals>
 </resources>

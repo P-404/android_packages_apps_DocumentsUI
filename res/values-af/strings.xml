@@ -37,6 +37,7 @@
     <string name="menu_delete" msgid="1022254131543256626">"Vee uit"</string>
     <string name="menu_select_all" msgid="7600576812185570403">"Kies almal"</string>
     <string name="menu_select" msgid="1366061076507142387">"Kies"</string>
+    <string name="menu_sort" msgid="3362419226163725275">"Rangskik volgens …"</string>
     <string name="menu_copy" msgid="7404820171352314754">"Kopieer na …"</string>
     <string name="menu_move" msgid="2310760789561129882">"Skuif na …"</string>
     <string name="menu_compress" msgid="37539111904724188">"Pers saam"</string>
@@ -66,9 +67,20 @@
     <string name="sort_dimension_file_type" msgid="5779709622922085381">"Tipe"</string>
     <string name="sort_dimension_size" msgid="2190547351159472884">"Grootte"</string>
     <string name="sort_dimension_date" msgid="4231005651895254033">"Gewysig"</string>
+    <string name="sort_dimension_name_ascending" msgid="3715725253270614742">"Lêernaam (A tot Z)"</string>
+    <string name="sort_dimension_file_type_ascending" msgid="3466973933402894292">"Soort (A tot Z)"</string>
+    <string name="sort_dimension_size_ascending" msgid="2617359017800057762">"Grootte (kleinste eerste)"</string>
+    <string name="sort_dimension_date_ascending" msgid="7920068979386920559">"Gewysig (oudste eerste)"</string>
+    <string name="sort_dimension_name_descending" msgid="1514525521100423342">"Lêernaam (Z tot A)"</string>
+    <string name="sort_dimension_file_type_descending" msgid="3344796059784511100">"Soort (Z tot A)"</string>
+    <string name="sort_dimension_size_descending" msgid="2367030017597348938">"Grootte (grootste eerste)"</string>
+    <string name="sort_dimension_date_descending" msgid="5466839955763127113">"Gewysig (nuutste eerste)"</string>
+    <string name="sort_dimension_dialog_title" msgid="3048641573962982157">"Rangskik volgens"</string>
+    <string name="sort_dimension_button_title" msgid="1898606989130896126">"Gerangskik volgens <xliff:g id="LABEL">%s</xliff:g>"</string>
     <string name="directory_items" msgid="6645621978998614003">"Aantal items"</string>
     <string name="sort_direction_ascending" msgid="5882787683763248102">"Stygend"</string>
     <string name="sort_direction_descending" msgid="1729187589765894076">"Dalend"</string>
+    <string name="open_external_app" msgid="7107920381038980086">"Maak <xliff:g id="APPNAME">%1$s</xliff:g> oop"</string>
     <string name="drawer_open" msgid="8071673398187261741">"Wys wortels"</string>
     <string name="drawer_close" msgid="4263880768630848848">"Versteek wortels"</string>
     <string name="save_error" msgid="8631128801982095782">"Kon nie dokument stoor nie"</string>
@@ -173,7 +185,6 @@
     <string name="open_external_dialog_request" msgid="8173558471322861268">"Gee <xliff:g id="APPNAME"><b>^1</b></xliff:g> toegang tot <xliff:g id="DIRECTORY"><i>^2</i></xliff:g>-gids op <xliff:g id="STORAGE"><i>^3</i></xliff:g>?"</string>
     <string name="open_external_dialog_request_primary_volume" msgid="2240992164087948176">"Gee <xliff:g id="APPNAME"><b>^1</b></xliff:g> toegang tot <xliff:g id="DIRECTORY"><i>^2</i></xliff:g>-gids?"</string>
     <string name="open_external_dialog_root_request" msgid="6776729293982633">"Gee <xliff:g id="APPNAME"><b>^1</b></xliff:g> toegang tot jou data, insluitend foto\'s en video\'s, op <xliff:g id="STORAGE"><i>^2</i></xliff:g>?"</string>
-    <string name="never_ask_again" msgid="525908236522201138">"Moenie weer vra nie"</string>
     <string name="allow" msgid="1275746941353040309">"Laat toe"</string>
     <string name="deny" msgid="5127201668078153379">"Weier"</string>
     <plurals name="elements_selected" formatted="false" msgid="4448165978637163692">
@@ -207,4 +218,8 @@
     <string name="new_archive_file_name" msgid="1604650338077249838">"argief<xliff:g id="EXTENSION">%s</xliff:g>"</string>
     <string name="overwrite_file_confirmation_message" msgid="2496109652768222716">"Skryf oor <xliff:g id="NAME">%1$s</xliff:g>?"</string>
     <string name="continue_in_background" msgid="1974214559047793331">"Gaan op die agtergrond voort"</string>
+    <plurals name="selected_count" formatted="false" msgid="7555250236512981129">
+      <item quantity="other"><xliff:g id="COUNT_1">%1$d</xliff:g> gekies</item>
+      <item quantity="one"><xliff:g id="COUNT_0">%1$d</xliff:g> gekies</item>
+    </plurals>
 </resources>

@@ -37,6 +37,7 @@
     <string name="menu_delete" msgid="1022254131543256626">"삭제"</string>
     <string name="menu_select_all" msgid="7600576812185570403">"모두 선택"</string>
     <string name="menu_select" msgid="1366061076507142387">"선택"</string>
+    <string name="menu_sort" msgid="3362419226163725275">"정렬 기준..."</string>
     <string name="menu_copy" msgid="7404820171352314754">"다음으로 복사:"</string>
     <string name="menu_move" msgid="2310760789561129882">"다음으로 이동:"</string>
     <string name="menu_compress" msgid="37539111904724188">"압축"</string>
@@ -66,9 +67,20 @@
     <string name="sort_dimension_file_type" msgid="5779709622922085381">"형식"</string>
     <string name="sort_dimension_size" msgid="2190547351159472884">"크기"</string>
     <string name="sort_dimension_date" msgid="4231005651895254033">"마지막 수정 시간"</string>
+    <string name="sort_dimension_name_ascending" msgid="3715725253270614742">"파일 이름(A~Z)"</string>
+    <string name="sort_dimension_file_type_ascending" msgid="3466973933402894292">"형식(A~Z)"</string>
+    <string name="sort_dimension_size_ascending" msgid="2617359017800057762">"크기(작은 파일순)"</string>
+    <string name="sort_dimension_date_ascending" msgid="7920068979386920559">"수정된 날짜(오래된 날짜순)"</string>
+    <string name="sort_dimension_name_descending" msgid="1514525521100423342">"파일 이름(Z~A)"</string>
+    <string name="sort_dimension_file_type_descending" msgid="3344796059784511100">"형식(Z~A)"</string>
+    <string name="sort_dimension_size_descending" msgid="2367030017597348938">"크기(큰 파일순)"</string>
+    <string name="sort_dimension_date_descending" msgid="5466839955763127113">"수정된 날짜(최근 날짜순)"</string>
+    <string name="sort_dimension_dialog_title" msgid="3048641573962982157">"정렬 기준"</string>
+    <string name="sort_dimension_button_title" msgid="1898606989130896126">"<xliff:g id="LABEL">%s</xliff:g>순으로 정렬됨"</string>
     <string name="directory_items" msgid="6645621978998614003">"항목 수"</string>
     <string name="sort_direction_ascending" msgid="5882787683763248102">"오름차순"</string>
     <string name="sort_direction_descending" msgid="1729187589765894076">"내림차순"</string>
+    <string name="open_external_app" msgid="7107920381038980086">"<xliff:g id="APPNAME">%1$s</xliff:g> 열기"</string>
     <string name="drawer_open" msgid="8071673398187261741">"루트 표시"</string>
     <string name="drawer_close" msgid="4263880768630848848">"루트 숨기기"</string>
     <string name="save_error" msgid="8631128801982095782">"문서를 저장하지 못했습니다."</string>
@@ -173,7 +185,6 @@
     <string name="open_external_dialog_request" msgid="8173558471322861268">"<xliff:g id="APPNAME"><b>^1</b></xliff:g>이(가) <xliff:g id="STORAGE"><i>^3</i></xliff:g>에서 <xliff:g id="DIRECTORY"><i>^2</i></xliff:g> 디렉토리에 액세스하도록 허용하시겠습니까?"</string>
     <string name="open_external_dialog_request_primary_volume" msgid="2240992164087948176">"<xliff:g id="APPNAME"><b>^1</b></xliff:g>에서 <xliff:g id="DIRECTORY"><i>^2</i></xliff:g> 디렉토리에 액세스하도록 허용하시겠습니까?"</string>
     <string name="open_external_dialog_root_request" msgid="6776729293982633">"<xliff:g id="APPNAME"><b>^1</b></xliff:g>에서 사진, 동영상 등 <xliff:g id="STORAGE"><i>^2</i></xliff:g>의 내 데이터에 액세스하도록 허용하시겠습니까?"</string>
-    <string name="never_ask_again" msgid="525908236522201138">"다시 묻지 않음"</string>
     <string name="allow" msgid="1275746941353040309">"허용"</string>
     <string name="deny" msgid="5127201668078153379">"거부"</string>
     <plurals name="elements_selected" formatted="false" msgid="4448165978637163692">
@@ -207,4 +218,5 @@
     <string name="new_archive_file_name" msgid="1604650338077249838">"보관처리<xliff:g id="EXTENSION">%s</xliff:g>"</string>
     <string name="overwrite_file_confirmation_message" msgid="2496109652768222716">"<xliff:g id="NAME">%1$s</xliff:g>을(를) 덮어쓰시겠습니까?"</string>
     <string name="continue_in_background" msgid="1974214559047793331">"백그라운드에서 계속"</string>
+    <!-- no translation found for selected_count (7555250236512981129) -->
 </resources>

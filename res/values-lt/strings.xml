@@ -37,6 +37,7 @@
     <string name="menu_delete" msgid="1022254131543256626">"Ištrinti"</string>
     <string name="menu_select_all" msgid="7600576812185570403">"Pasirinkti viską"</string>
     <string name="menu_select" msgid="1366061076507142387">"Pasirinkti"</string>
+    <string name="menu_sort" msgid="3362419226163725275">"Rūšiuoti pagal..."</string>
     <string name="menu_copy" msgid="7404820171352314754">"Kopijuoti į..."</string>
     <string name="menu_move" msgid="2310760789561129882">"Perkelti į…"</string>
     <string name="menu_compress" msgid="37539111904724188">"Suglaudinti"</string>
@@ -66,9 +67,20 @@
     <string name="sort_dimension_file_type" msgid="5779709622922085381">"Tipas"</string>
     <string name="sort_dimension_size" msgid="2190547351159472884">"Dydis"</string>
     <string name="sort_dimension_date" msgid="4231005651895254033">"Pakeista"</string>
+    <string name="sort_dimension_name_ascending" msgid="3715725253270614742">"Failo pav. (nuo A iki Z)"</string>
+    <string name="sort_dimension_file_type_ascending" msgid="3466973933402894292">"Tipas (nuo A iki Z)"</string>
+    <string name="sort_dimension_size_ascending" msgid="2617359017800057762">"Dydis (pirmiau mažiausi)"</string>
+    <string name="sort_dimension_date_ascending" msgid="7920068979386920559">"Pakeista (pirm. sen.)"</string>
+    <string name="sort_dimension_name_descending" msgid="1514525521100423342">"Failo pav. (nuo Z iki A)"</string>
+    <string name="sort_dimension_file_type_descending" msgid="3344796059784511100">"Tipas (nuo Z iki A)"</string>
+    <string name="sort_dimension_size_descending" msgid="2367030017597348938">"Dydis (pirm. didžiausi)"</string>
+    <string name="sort_dimension_date_descending" msgid="5466839955763127113">"Pakeista (pirm. nauj.)"</string>
+    <string name="sort_dimension_dialog_title" msgid="3048641573962982157">"Rūšiuoti pagal"</string>
+    <string name="sort_dimension_button_title" msgid="1898606989130896126">"Rūšiuojama pagal <xliff:g id="LABEL">%s</xliff:g>"</string>
     <string name="directory_items" msgid="6645621978998614003">"Elementų skaičius"</string>
     <string name="sort_direction_ascending" msgid="5882787683763248102">"Didėjimo tvarka"</string>
     <string name="sort_direction_descending" msgid="1729187589765894076">"Mažėjimo tvarka"</string>
+    <string name="open_external_app" msgid="7107920381038980086">"Atidaryti programą „<xliff:g id="APPNAME">%1$s</xliff:g>“"</string>
     <string name="drawer_open" msgid="8071673398187261741">"Rodyti šaknis"</string>
     <string name="drawer_close" msgid="4263880768630848848">"Slėpti šaknis"</string>
     <string name="save_error" msgid="8631128801982095782">"Nepavyko išsaugoti dokumento"</string>
@@ -205,7 +217,6 @@
     <string name="open_external_dialog_request" msgid="8173558471322861268">"Suteikti „<xliff:g id="APPNAME"><b>^1</b></xliff:g>“ prieigą prie katalogo „<xliff:g id="DIRECTORY"><i>^2</i></xliff:g>“ <xliff:g id="STORAGE"><i>^3</i></xliff:g>?"</string>
     <string name="open_external_dialog_request_primary_volume" msgid="2240992164087948176">"Suteikti „<xliff:g id="APPNAME"><b>^1</b></xliff:g>“ prieigą prie katalogo „<xliff:g id="DIRECTORY"><i>^2</i></xliff:g>“?"</string>
     <string name="open_external_dialog_root_request" msgid="6776729293982633">"Suteikti programai „<xliff:g id="APPNAME"><b>^1</b></xliff:g>“ prieigą prie duomenų, įskaitant nuotraukas ir vaizdo įrašus, <xliff:g id="STORAGE"><i>^2</i></xliff:g>?"</string>
-    <string name="never_ask_again" msgid="525908236522201138">"Daugiau neklausti"</string>
     <string name="allow" msgid="1275746941353040309">"Leisti"</string>
     <string name="deny" msgid="5127201668078153379">"Atmesti"</string>
     <plurals name="elements_selected" formatted="false" msgid="4448165978637163692">
@@ -249,4 +260,10 @@
     <string name="new_archive_file_name" msgid="1604650338077249838">"archyvas<xliff:g id="EXTENSION">%s</xliff:g>"</string>
     <string name="overwrite_file_confirmation_message" msgid="2496109652768222716">"Perrašyti „<xliff:g id="NAME">%1$s</xliff:g>“?"</string>
     <string name="continue_in_background" msgid="1974214559047793331">"Tęsti fone"</string>
+    <plurals name="selected_count" formatted="false" msgid="7555250236512981129">
+      <item quantity="one">Pasirinktas <xliff:g id="COUNT_1">%1$d</xliff:g> elementas</item>
+      <item quantity="few">Pasirinkti <xliff:g id="COUNT_1">%1$d</xliff:g> elementai</item>
+      <item quantity="many">Pasirinkta <xliff:g id="COUNT_1">%1$d</xliff:g> elemento</item>
+      <item quantity="other">Pasirinkta <xliff:g id="COUNT_1">%1$d</xliff:g> elementų</item>
+    </plurals>
 </resources>

@@ -20,13 +20,10 @@ import static com.android.documentsui.base.DocumentInfo.getCursorInt;
 import static com.android.documentsui.base.DocumentInfo.getCursorString;
 import static com.android.documentsui.base.SharedMinimal.DEBUG;
 
-import android.app.Activity;
-import android.app.LoaderManager.LoaderCallbacks;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
-import android.content.Loader;
 import android.content.pm.ResolveInfo;
 import android.database.Cursor;
 import android.graphics.drawable.ColorDrawable;
@@ -39,6 +36,9 @@ import android.util.Pair;
 import android.view.DragEvent;
 
 import androidx.annotation.VisibleForTesting;
+import androidx.fragment.app.FragmentActivity;
+import androidx.loader.app.LoaderManager.LoaderCallbacks;
+import androidx.loader.content.Loader;
 import androidx.recyclerview.selection.ItemDetailsLookup.ItemDetails;
 import androidx.recyclerview.selection.MutableSelection;
 import androidx.recyclerview.selection.SelectionTracker;
@@ -63,6 +63,7 @@ import com.android.documentsui.roots.LoadFirstRootTask;
 import com.android.documentsui.roots.LoadRootTask;
 import com.android.documentsui.roots.ProvidersAccess;
 import com.android.documentsui.sidebar.EjectRootTask;
+import com.android.documentsui.sorting.SortListFragment;
 import com.android.documentsui.ui.Snackbars;
 
 import java.util.ArrayList;
@@ -76,7 +77,7 @@ import javax.annotation.Nullable;
 /**
  * Provides support for specializing the actions (openDocument etc.) to the host activity.
  */
-public abstract class AbstractActionHandler<T extends Activity & CommonAddons>
+public abstract class AbstractActionHandler<T extends FragmentActivity & CommonAddons>
         implements ActionHandler {
 
     @VisibleForTesting
@@ -174,7 +175,7 @@ public abstract class AbstractActionHandler<T extends Activity & CommonAddons>
     }
 
     private void onAuthenticationResult(int resultCode) {
-        if (resultCode == Activity.RESULT_OK) {
+        if (resultCode == FragmentActivity.RESULT_OK) {
             Log.v(TAG, "Authentication was successful. Refreshing directory now.");
             mActivity.refreshCurrentRootAndDirectory(AnimationView.ANIM_NONE);
         }
@@ -304,7 +305,12 @@ public abstract class AbstractActionHandler<T extends Activity & CommonAddons>
     public void showCreateDirectoryDialog() {
         Metrics.logUserAction(mActivity, Metrics.USER_ACTION_CREATE_DIR);
 
-        CreateDirectoryFragment.show(mActivity.getFragmentManager());
+        CreateDirectoryFragment.show(mActivity.getSupportFragmentManager());
+    }
+
+    @Override
+    public void showSortDialog() {
+        SortListFragment.show(mActivity.getSupportFragmentManager(), mState.sortModel);
     }
 
     @Override
@@ -494,7 +500,7 @@ public abstract class AbstractActionHandler<T extends Activity & CommonAddons>
             return;
         }
 
-        mActivity.getLoaderManager().restartLoader(LOADER_ID, null, mBindings);
+        mActivity.getSupportLoaderManager().restartLoader(LOADER_ID, null, mBindings);
     }
 
     protected final boolean launchToDocument(Uri uri) {

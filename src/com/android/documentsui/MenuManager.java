@@ -16,8 +16,6 @@
 
 package com.android.documentsui;
 
-import android.app.Fragment;
-import android.util.Log;
 import android.view.KeyboardShortcutGroup;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -33,6 +31,7 @@ import com.android.documentsui.dirlist.DirectoryFragment;
 import com.android.documentsui.queries.SearchViewManager;
 import com.android.documentsui.sidebar.RootsFragment;
 import androidx.annotation.VisibleForTesting;
+import androidx.fragment.app.Fragment;
 
 import java.util.List;
 import java.util.function.IntFunction;
@@ -69,6 +68,7 @@ public abstract class MenuManager {
         updateExtractTo(menu.findItem(R.id.action_menu_extract_to), selection);
         updateInspect(menu.findItem(R.id.action_menu_inspect), selection);
         updateViewInOwner(menu.findItem(R.id.action_menu_view_in_owner), selection);
+        updateSort(menu.findItem(R.id.action_menu_sort));
 
         Menus.disableHiddenItems(menu);
     }
@@ -92,6 +92,8 @@ public abstract class MenuManager {
         updateAdvanced(mOptionMenu.findItem(R.id.option_menu_advanced));
         updateDebug(mOptionMenu.findItem(R.id.option_menu_debug));
         updateInspect(mOptionMenu.findItem(R.id.option_menu_inspect));
+        updateSort(mOptionMenu.findItem(R.id.option_menu_sort));
+
         Menus.disableHiddenItems(mOptionMenu);
         mSearchManager.updateMenu();
     }
@@ -240,6 +242,10 @@ public abstract class MenuManager {
         advanced.setVisible(mState.showDeviceStorageOption);
         advanced.setTitle(mState.showDeviceStorageOption && mState.showAdvanced
                 ? R.string.menu_advanced_hide : R.string.menu_advanced_show);
+    }
+
+    protected void updateSort(MenuItem sort) {
+        sort.setVisible(true);
     }
 
     protected void updateDebug(MenuItem debug) {
