@@ -116,7 +116,7 @@ public final class GestureSelectionHelper extends ScrollHost implements OnItemTo
         if (e.getActionMasked() == MotionEvent.ACTION_DOWN) {
             if (mItemLookup.getItemDetails(e) != null) {
                 mLastTouchedItemPosition = mView.getItemUnder(e);
-        }
+            }
         }
 
         // See handleTouch(MotionEvent) javadoc for explanation as to why this is correct.
@@ -151,7 +151,6 @@ public final class GestureSelectionHelper extends ScrollHost implements OnItemTo
             return false;
         }
 
-
         switch (e.getActionMasked()) {
             case MotionEvent.ACTION_MOVE:
                 handleMoveEvent(e);
@@ -170,7 +169,6 @@ public final class GestureSelectionHelper extends ScrollHost implements OnItemTo
     @Override
     public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
     }
-
 
     // Called when ACTION_UP event is to be handled.
     // Essentially, since this means all gesture movement is over, reset everything and apply
