@@ -19,9 +19,10 @@ package com.android.documentsui.ui;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Color;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.filters.SmallTest;
-import android.support.test.runner.AndroidJUnit4;
+
+import androidx.test.InstrumentationRegistry;
+import androidx.test.filters.SmallTest;
+import androidx.test.runner.AndroidJUnit4;
 
 import com.android.documentsui.R;
 
@@ -54,7 +55,7 @@ public class DarkThemeUiTest extends ThemeUiTestBase {
     @Test
     public void themeNightModeEnable_actionBarColorShouldBeDark() {
 
-        assertTheme(R.styleable.ActionBarView, R.styleable.ActionBarView_android_colorPrimary,
+        assertTheme(R.styleable.ActionBarView, R.styleable.ActionBarView_android_colorBackground,
                 mExpectedDarkGreyColor);
     }
 

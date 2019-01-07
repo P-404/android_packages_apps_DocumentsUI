@@ -34,6 +34,7 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
 
 import androidx.annotation.CallSuper;
 import androidx.annotation.LayoutRes;
@@ -45,6 +46,7 @@ import androidx.fragment.app.Fragment;
 import com.android.documentsui.AbstractActionHandler.CommonAddons;
 import com.android.documentsui.Injector.Injected;
 import com.android.documentsui.NavigationViewManager.Breadcrumb;
+import com.android.documentsui.R;
 import com.android.documentsui.base.DocumentInfo;
 import com.android.documentsui.base.EventHandler;
 import com.android.documentsui.base.RootInfo;
@@ -64,6 +66,9 @@ import com.android.documentsui.roots.ProvidersCache;
 import com.android.documentsui.sidebar.RootsFragment;
 import com.android.documentsui.sorting.SortController;
 import com.android.documentsui.sorting.SortModel;
+
+import com.google.android.material.appbar.AppBarLayout;
+import com.google.android.material.chip.ChipGroup;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -184,7 +189,12 @@ public abstract class BaseActivity
                         mInjector.features,
                         mInjector.debugHelper::toggleDebugMode,
                         cmdInterceptor);
-        mSearchManager = new SearchViewManager(searchListener, queryInterceptor, icicle);
+
+        ChipGroup chipGroup = findViewById(R.id.search_chip_group);
+        mSearchManager = new SearchViewManager(searchListener, queryInterceptor,
+                chipGroup, icicle);
+        mSearchManager.updateChips(getCurrentRoot().derivedMimeTypes);
+
         mSortController = SortController.create(this, mState.derivedMode, mState.sortModel);
 
         mPreferencesMonitor = new PreferencesMonitor(
@@ -318,6 +328,15 @@ public abstract class BaseActivity
                     TimeoutTask.DEFAULT_TIMEOUT,
                     doc -> mInjector.actions.openRootDocument(doc));
         }
+
+        final AppBarLayout appBarLayout = findViewById(R.id.app_bar);
+        if (appBarLayout != null) {
+            appBarLayout.setExpanded(true);
+        }
+
+        updateHeaderTitle();
+
+        mSearchManager.updateChips(root.derivedMimeTypes);
     }
 
     @Override
@@ -436,6 +455,7 @@ public abstract class BaseActivity
         setTitle(mState.stack.getTitle());
 
         invalidateOptionsMenu();
+        mSortController.onViewModeChanged(mState.derivedMode);
     }
 
     private final List<String> getExcludedAuthorities() {
@@ -513,6 +533,51 @@ public abstract class BaseActivity
 
     public void setPending(boolean pending) {
         // TODO: Isolate this behavior to PickActivity.
+    }
+
+    public void updateHeaderTitle() {
+        if (!mState.stack.isInitialized()) {
+            //stack has not initialized, the header will update after the stack finishes loading
+            return;
+        }
+
+        final RootInfo root = mState.stack.getRoot();
+        final String rootTitle = root.title;
+        String result;
+
+        switch (root.derivedType) {
+            case RootInfo.TYPE_RECENTS:
+                if (mSearchManager.isSearching()) {
+                    result = getString(R.string.root_info_header_global_search);
+                } else {
+                    result = getString(R.string.root_info_header_recent);
+                }
+                break;
+            case RootInfo.TYPE_IMAGES:
+            case RootInfo.TYPE_VIDEO:
+            case RootInfo.TYPE_AUDIO:
+                result = getString(R.string.root_info_header_media, rootTitle);
+                break;
+            case RootInfo.TYPE_DOWNLOADS:
+            case RootInfo.TYPE_LOCAL:
+            case RootInfo.TYPE_MTP:
+            case RootInfo.TYPE_SD:
+            case RootInfo.TYPE_USB:
+                result = getString(R.string.root_info_header_storage, rootTitle);
+                break;
+            default:
+                final String summary = root.summary;
+                if (summary != null && !summary.isEmpty()) {
+                    result = getString(R.string.root_info_header_app_with_summary,
+                            rootTitle, summary);
+                } else {
+                    result = getString(R.string.root_info_header_app, rootTitle);
+                }
+                break;
+        }
+
+        TextView headerTitle = findViewById(R.id.header_title);
+        headerTitle.setText(result);
     }
 
     @Override

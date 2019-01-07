@@ -349,6 +349,11 @@ public abstract class AbstractActionHandler<T extends FragmentActivity & CommonA
         }
     }
 
+    @Override
+    public boolean previewItem(ItemDetails<String> doc) {
+        throw new UnsupportedOperationException("Can't handle preview.");
+    }
+
     private void openFolderInSearchResult(@Nullable DocumentStack stack, DocumentInfo doc) {
         if (stack == null) {
             mState.stack.popToRootDocument();
@@ -566,17 +571,29 @@ public abstract class AbstractActionHandler<T extends FragmentActivity & CommonA
             Context context = mActivity;
 
             if (mState.stack.isRecents()) {
-
-                if (DEBUG) Log.d(TAG, "Creating new loader recents.");
-                return new RecentsLoader(
-                        context,
-                        mProviders,
-                        mState,
-                        mInjector.features,
-                        mExecutors,
-                        mInjector.fileTypeLookup);
+                if (mSearchMgr.isSearching()) {
+                    if (DEBUG) {
+                        Log.d(TAG, "Creating new GlobalSearchLoader.");
+                    }
+                    return new GlobalSearchLoader(
+                            context,
+                            mProviders,
+                            mState,
+                            mExecutors,
+                            mInjector.fileTypeLookup,
+                            mSearchMgr.buildQueryArgs());
+                } else {
+                    if (DEBUG) {
+                        Log.d(TAG, "Creating new loader recents.");
+                    }
+                    return new RecentsLoader(
+                            context,
+                            mProviders,
+                            mState,
+                            mExecutors,
+                            mInjector.fileTypeLookup);
+                }
             } else {
-
                 Uri contentsUri = mSearchMgr.isSearching()
                         ? DocumentsContract.buildSearchDocumentsUri(
                             mState.stack.getRoot().authority,
@@ -585,6 +602,10 @@ public abstract class AbstractActionHandler<T extends FragmentActivity & CommonA
                         : DocumentsContract.buildChildDocumentsUri(
                                 mState.stack.peek().authority,
                                 mState.stack.peek().documentId);
+
+                final Bundle queryArgs = mSearchMgr.isSearching()
+                        ? mSearchMgr.buildQueryArgs()
+                        : null;
 
                 if (mInjector.config.managedModeEnabled(mState.stack)) {
                     contentsUri = DocumentsContract.setManageMode(contentsUri);
@@ -603,7 +624,7 @@ public abstract class AbstractActionHandler<T extends FragmentActivity & CommonA
                         mState.sortModel,
                         mInjector.fileTypeLookup,
                         mContentLock,
-                        mSearchMgr.isSearching());
+                        queryArgs);
             }
         }
 

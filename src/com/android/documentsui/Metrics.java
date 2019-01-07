@@ -41,8 +41,8 @@ import com.android.documentsui.files.LauncherActivity;
 import com.android.documentsui.roots.ProvidersAccess;
 import com.android.documentsui.services.FileOperationService;
 import com.android.documentsui.services.FileOperationService.OpType;
-import com.android.internal.logging.MetricsLogger;
 
+import java.io.FileNotFoundException;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.List;
@@ -709,7 +709,7 @@ public final class Metrics {
             final RootInfo root = providers.getRootOneshot(
                     Providers.AUTHORITY_STORAGE, path.getRootId());
             isInternal = !root.supportsEject();
-        } catch (RemoteException | RuntimeException e) {
+        } catch (FileNotFoundException | RemoteException | RuntimeException e) {
             Log.e(TAG, "Failed to obtain its root info. Log the metrics as internal.", e);
             // It's not very likely to have an external storage so log it as internal.
             isInternal = true;
@@ -729,7 +729,7 @@ public final class Metrics {
      */
     private static void logCount(Context context, String name) {
         if (DEBUG) Log.d(TAG, name + ": " + 1);
-        MetricsLogger.count(context, name, 1);
+        // TODO b/111552654 migrate westworld
     }
 
     /**
@@ -741,7 +741,7 @@ public final class Metrics {
      */
     private static void logHistogram(Context context, String name, @ActionType int bucket) {
         if (DEBUG) Log.d(TAG, name + ": " + bucket);
-        MetricsLogger.histogram(context, name, bucket);
+        // TODO b/111552654 migrate westworld
     }
 
     /**

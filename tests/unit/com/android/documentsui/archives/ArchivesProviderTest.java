@@ -34,10 +34,11 @@ import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
 import android.os.RemoteException;
 import android.provider.DocumentsContract;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.filters.MediumTest;
-import android.support.test.runner.AndroidJUnit4;
 import android.text.TextUtils;
+
+import androidx.test.InstrumentationRegistry;
+import androidx.test.filters.MediumTest;
+import androidx.test.runner.AndroidJUnit4;
 
 import org.junit.After;
 import org.junit.Before;
@@ -266,7 +267,7 @@ public class ArchivesProviderTest {
     }
 
     @Test
-    public void testGetDocumentMetadata() throws InterruptedException, RemoteException {
+    public void testGetDocumentMetadata() throws Exception {
         final Uri sourceUri = DocumentsContract.buildDocumentUri(
                 ResourcesProvider.AUTHORITY, "images.zip");
         final Uri archiveUri = ArchivesProvider.buildUriForArchive(sourceUri,

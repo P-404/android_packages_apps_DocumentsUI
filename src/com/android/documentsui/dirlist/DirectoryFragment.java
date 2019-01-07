@@ -489,6 +489,10 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
     }
 
     private boolean onItemActivated(ItemDetails<String> item, MotionEvent e) {
+        if (((DocumentItemDetails) item).inPreviewIconHotspot(e)) {
+            return mActions.previewItem(item);
+        }
+
         return mActions.openItem(
                 item,
                 ActionHandler.VIEW_TYPE_PREVIEW,
@@ -1095,6 +1099,8 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
                 // For orientation changed case, sometimes the docs loading comes after the menu
                 // update. We need to update the menu here to ensure the status is correct.
                 mInjector.menuManager.updateOptionMenu();
+
+                mActivity.updateHeaderTitle();
             }
         }
     }

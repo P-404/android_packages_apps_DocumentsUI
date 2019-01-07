@@ -18,8 +18,9 @@ package com.android.documentsui.ui;
 
 import android.content.res.Configuration;
 import android.graphics.Color;
-import android.support.test.filters.SmallTest;
-import android.support.test.runner.AndroidJUnit4;
+
+import androidx.test.filters.SmallTest;
+import androidx.test.runner.AndroidJUnit4;
 
 import com.android.documentsui.R;
 
@@ -43,7 +44,7 @@ public class ThemeUiTest extends ThemeUiTestBase {
 
     @Test
     public void themeNightModeDisable_actionBarColorShouldBeLight() {
-        assertTheme(R.styleable.ActionBarView, R.styleable.ActionBarView_android_colorPrimary,
+        assertTheme(R.styleable.ActionBarView, R.styleable.ActionBarView_android_colorBackground,
                 Color.WHITE);
     }
 

@@ -19,7 +19,6 @@ package com.android.documentsui.base;
 import static com.android.documentsui.base.SharedMinimal.TAG;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -47,6 +46,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import androidx.annotation.PluralsRes;
+import androidx.appcompat.app.AlertDialog;
 
 /** @hide */
 public final class Shared {
@@ -76,6 +76,11 @@ public final class Shared {
      * Extra flag used to store query of type String in the bundle.
      */
     public static final String EXTRA_QUERY = "query";
+
+    /**
+     * Extra flag used to store chip's title of type String array in the bundle.
+     */
+    public static final String EXTRA_QUERY_CHIPS = "query_chips";
 
     /**
      * Extra flag used to store state of type State in the bundle.

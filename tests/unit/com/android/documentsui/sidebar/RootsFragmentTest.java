@@ -21,8 +21,9 @@ import static junit.framework.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 
 import android.content.pm.ResolveInfo;
-import android.support.test.filters.MediumTest;
-import android.support.test.runner.AndroidJUnit4;
+
+import androidx.test.filters.MediumTest;
+import androidx.test.runner.AndroidJUnit4;
 
 import com.android.documentsui.base.RootInfo;
 import com.android.documentsui.testing.TestProvidersAccess;
@@ -53,8 +54,8 @@ public class RootsFragmentTest {
             TestProvidersAccess.DOWNLOADS.title,
             "" /* SpacerItem */,
             TestProvidersAccess.EXTERNALSTORAGE.title,
-            "" /* SpacerItem */,
             TestProvidersAccess.HAMMY.title,
+            "" /* SpacerItem */,
             TestProvidersAccess.INSPECTOR.title,
             TestProvidersAccess.PICKLES.title};
 
