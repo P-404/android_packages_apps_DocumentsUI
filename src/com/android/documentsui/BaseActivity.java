@@ -29,11 +29,13 @@ import android.os.Bundle;
 import android.os.MessageQueue.IdleHandler;
 import android.preference.PreferenceManager;
 import android.provider.DocumentsContract;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.CallSuper;
@@ -54,6 +56,7 @@ import com.android.documentsui.base.Shared;
 import com.android.documentsui.base.State;
 import com.android.documentsui.base.State.ViewMode;
 import com.android.documentsui.dirlist.AnimationView;
+import com.android.documentsui.dirlist.AppsRowManager;
 import com.android.documentsui.dirlist.DirectoryFragment;
 import com.android.documentsui.prefs.LocalPreferences;
 import com.android.documentsui.prefs.Preferences;
@@ -63,12 +66,13 @@ import com.android.documentsui.queries.CommandInterceptor;
 import com.android.documentsui.queries.SearchViewManager;
 import com.android.documentsui.queries.SearchViewManager.SearchManagerListener;
 import com.android.documentsui.roots.ProvidersCache;
+import com.android.documentsui.sidebar.Item;
+import com.android.documentsui.sidebar.RootItem;
 import com.android.documentsui.sidebar.RootsFragment;
 import com.android.documentsui.sorting.SortController;
 import com.android.documentsui.sorting.SortModel;
 
 import com.google.android.material.appbar.AppBarLayout;
-import com.google.android.material.chip.ChipGroup;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -82,6 +86,7 @@ public abstract class BaseActivity
     private static final String BENCHMARK_TESTING_PACKAGE = "com.android.documentsui.appperftests";
 
     protected SearchViewManager mSearchManager;
+    protected AppsRowManager mAppsRowManager;
     protected State mState;
 
     @Injected
@@ -103,6 +108,7 @@ public abstract class BaseActivity
     private RootsMonitor<BaseActivity> mRootsMonitor;
 
     private long mStartTime;
+    private boolean mHasQueryContentFromIntent;
 
     private PreferencesMonitor mPreferencesMonitor;
 
@@ -190,11 +196,16 @@ public abstract class BaseActivity
                         mInjector.debugHelper::toggleDebugMode,
                         cmdInterceptor);
 
-        ChipGroup chipGroup = findViewById(R.id.search_chip_group);
+        ViewGroup chipGroup = findViewById(R.id.search_chip_group);
         mSearchManager = new SearchViewManager(searchListener, queryInterceptor,
                 chipGroup, icicle);
         mSearchManager.updateChips(getCurrentRoot().derivedMimeTypes);
-
+        // parse the query content from intent when launch the
+        // activity at the first time
+        if (icicle == null) {
+            mHasQueryContentFromIntent = mSearchManager.parseQueryContentFromIntent(getIntent(),
+                    mState.action);
+        }
         mSortController = SortController.create(this, mState.derivedMode, mState.sortModel);
 
         mPreferencesMonitor = new PreferencesMonitor(
@@ -335,8 +346,8 @@ public abstract class BaseActivity
         }
 
         updateHeaderTitle();
-
         mSearchManager.updateChips(root.derivedMimeTypes);
+        mAppsRowManager.updateView(this);
     }
 
     @Override
@@ -439,6 +450,12 @@ public abstract class BaseActivity
         // refreshCurrentRootAndDirectory() from being called while we're restoring the state of UI
         // from the saved state passed in onCreate().
         mSearchManager.cancelSearch();
+
+        // only set the query content in the first launch
+        if (mHasQueryContentFromIntent) {
+            mHasQueryContentFromIntent = false;
+            mSearchManager.setCurrentSearch(mSearchManager.getQueryContentFromIntent());
+        }
 
         mState.derivedMode = LocalPreferences.getViewMode(this, mState.stack.getRoot(), MODE_GRID);
 
@@ -547,11 +564,7 @@ public abstract class BaseActivity
 
         switch (root.derivedType) {
             case RootInfo.TYPE_RECENTS:
-                if (mSearchManager.isSearching()) {
-                    result = getString(R.string.root_info_header_global_search);
-                } else {
-                    result = getString(R.string.root_info_header_recent);
-                }
+                result = getHeaderRecentTitle();
                 break;
             case RootInfo.TYPE_IMAGES:
             case RootInfo.TYPE_VIDEO:
@@ -563,21 +576,52 @@ public abstract class BaseActivity
             case RootInfo.TYPE_MTP:
             case RootInfo.TYPE_SD:
             case RootInfo.TYPE_USB:
-                result = getString(R.string.root_info_header_storage, rootTitle);
+                result = getHeaderStorageTitle(rootTitle);
                 break;
             default:
                 final String summary = root.summary;
-                if (summary != null && !summary.isEmpty()) {
-                    result = getString(R.string.root_info_header_app_with_summary,
-                            rootTitle, summary);
-                } else {
-                    result = getString(R.string.root_info_header_app, rootTitle);
-                }
+                result = getHeaderDefaultTitle(rootTitle, summary);
                 break;
         }
 
         TextView headerTitle = findViewById(R.id.header_title);
         headerTitle.setText(result);
+    }
+
+    private String getHeaderRecentTitle() {
+        // If stack size larger than 1, it means user global search than enter a folder, but search
+        // is not expanded on that time.
+        boolean isGlobalSearch = mSearchManager.isSearching() || mState.stack.size() > 1;
+        if (mState.isPhotoPicking()) {
+            final int resId = isGlobalSearch
+                    ? R.string.root_info_header_image_global_search
+                    : R.string.root_info_header_image_recent;
+            return getString(resId);
+        } else {
+            final int resId = isGlobalSearch
+                    ? R.string.root_info_header_global_search
+                    : R.string.root_info_header_recent;
+            return getString(resId);
+        }
+    }
+
+    private String getHeaderStorageTitle(String rootTitle) {
+        final int resId = mState.isPhotoPicking()
+                ? R.string.root_info_header_image_storage : R.string.root_info_header_storage;
+        return getString(resId, rootTitle);
+    }
+
+    private String getHeaderDefaultTitle(String rootTitle, String summary) {
+        if (TextUtils.isEmpty(summary)) {
+            final int resId = mState.isPhotoPicking()
+                    ? R.string.root_info_header_image_app : R.string.root_info_header_app;
+            return getString(resId, rootTitle);
+        } else {
+            final int resId = mState.isPhotoPicking()
+                    ? R.string.root_info_header_image_app_with_summary
+                    : R.string.root_info_header_app_with_summary;
+            return getString(resId, rootTitle, summary);
+        }
     }
 
     @Override

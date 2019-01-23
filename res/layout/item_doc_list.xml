@@ -22,7 +22,6 @@
     android:layout_height="wrap_content"
     android:background="?android:attr/selectableItemBackground"
     android:focusable="true"
-    android:clickable="true"
     android:orientation="horizontal" >
 
 
@@ -98,8 +97,9 @@
 
                 <TextView
                     android:id="@+id/date"
-                    android:layout_width="70dp"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_weight="0.4"
                     android:ellipsize="end"
                     android:singleLine="true"
                     android:textAlignment="viewStart"
@@ -107,9 +107,10 @@
 
                 <TextView
                     android:id="@+id/size"
-                    android:layout_width="70dp"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
+                    android:layout_weight="0.3"
                     android:ellipsize="end"
                     android:singleLine="true"
                     android:textAlignment="viewStart"
@@ -117,20 +118,10 @@
 
                 <TextView
                     android:id="@+id/file_type"
-                    android:layout_width="70dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:ellipsize="end"
-                    android:singleLine="true"
-                    android:textAlignment="viewStart"
-                    android:textAppearance="@android:style/TextAppearance.Material.Caption"/>
-
-                <TextView
-                    android:id="@android:id/summary"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
-                    android:layout_weight="1"
+                    android:layout_weight="0.3"
                     android:ellipsize="end"
                     android:singleLine="true"
                     android:textAlignment="viewStart"
