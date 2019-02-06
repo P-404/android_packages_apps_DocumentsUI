@@ -26,7 +26,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.DocumentsContract;
-import android.provider.DocumentsContract.Root;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
@@ -165,6 +164,15 @@ public class SearchViewManager implements
     }
 
     /**
+     * Initialize the search chips base on the acceptMimeTypes.
+     *
+     * @param acceptMimeTypes use to filter chips
+     */
+    public void initChipSets(String[] acceptMimeTypes) {
+        mChipViewManager.initChipSets(acceptMimeTypes);
+    }
+
+    /**
      * Update the search chips base on the acceptMimeTypes.
      * If the count of matched chips is less than two, we will
      * hide the chip row.
@@ -186,12 +194,8 @@ public class SearchViewManager implements
         mSearchView.setOnQueryTextFocusChangeListener(this);
 
         mFullBar = isFullBarSearch;
-        if (mFullBar) {
-            mMenuItem.setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW
-                    | MenuItem.SHOW_AS_ACTION_ALWAYS);
-            mMenuItem.setOnActionExpandListener(this);
-            mSearchView.setMaxWidth(Integer.MAX_VALUE);
-        }
+        mSearchView.setMaxWidth(Integer.MAX_VALUE);
+        mMenuItem.setOnActionExpandListener(this);
 
         restoreSearch();
     }
@@ -248,7 +252,7 @@ public class SearchViewManager implements
         }
 
         final RootInfo root = stack != null ? stack.getRoot() : null;
-        if (root == null || (root.flags & Root.FLAG_SUPPORTS_SEARCH) == 0) {
+        if (root == null || !root.supportsSearch()) {
             supportsSearch = false;
         }
 
@@ -261,16 +265,10 @@ public class SearchViewManager implements
             mCurrentSearch = null;
         }
 
-        mMenuItem.setVisible(supportsSearch);
+        // Recent root show open search bar, do not show duplicate search icon.
+        mMenuItem.setVisible(supportsSearch && !stack.isRecents());
 
-        // Only Storage roots, Downloads root, media roots and recent root
-        // support mime type query now.
-        // TODO: b/121234248 add check for whether the root supports new search method.
-        if (supportsSearch && !root.isDownloads() && !root.isStorage() && !root.isLibrary()) {
-            supportsSearch = false;
-        }
-
-        mChipViewManager.setChipsRowVisible(supportsSearch);
+        mChipViewManager.setChipsRowVisible(supportsSearch && root.supportsMimeTypesSearch());
     }
 
     /**
@@ -313,15 +311,15 @@ public class SearchViewManager implements
      */
     private void restoreSearch() {
         if (isSearching()) {
-            if (mFullBar) {
-                mMenuItem.expandActionView();
-            } else {
-                mSearchView.setIconified(false);
-            }
-            onSearchExpanded();
+            onSearchBarClicked();
             mSearchView.setQuery(mCurrentSearch, false);
             mSearchView.clearFocus();
         }
+    }
+
+    public void onSearchBarClicked() {
+        mMenuItem.expandActionView();
+        onSearchExpanded();
     }
 
     private void onSearchExpanded() {

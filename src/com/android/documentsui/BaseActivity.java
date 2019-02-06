@@ -141,7 +141,7 @@ public abstract class BaseActivity
         mInjector = getInjector();
         mState = getState(icicle);
         mDrawer = DrawerController.create(this, mInjector.config);
-        Metrics.logActivityLaunch(this, mState, intent);
+        Metrics.logActivityLaunch(mState, intent);
 
         mProviders = DocumentsApplication.getProvidersCache(this);
         mDocs = DocumentsAccess.create(this);
@@ -153,7 +153,7 @@ public abstract class BaseActivity
                 Shared.findView(this, R.id.dropdown_breadcrumb, R.id.horizontal_breadcrumb);
         assert(breadcrumb != null);
 
-        mNavigator = new NavigationViewManager(mDrawer, toolbar, mState, this, breadcrumb);
+        mNavigator = new NavigationViewManager(this, mDrawer, mState, this, breadcrumb);
         SearchManagerListener searchListener = new SearchManagerListener() {
             /**
              * Called when search results changed. Refreshes the content of the directory. It
@@ -163,7 +163,7 @@ public abstract class BaseActivity
             @Override
             public void onSearchChanged(@Nullable String query) {
                 if (query != null) {
-                    Metrics.logUserAction(BaseActivity.this, Metrics.USER_ACTION_SEARCH);
+                    Metrics.logUserAction(MetricConsts.USER_ACTION_SEARCH);
                 }
 
                 mInjector.actions.loadDocumentsForCurrentStack();
@@ -199,6 +199,9 @@ public abstract class BaseActivity
         ViewGroup chipGroup = findViewById(R.id.search_chip_group);
         mSearchManager = new SearchViewManager(searchListener, queryInterceptor,
                 chipGroup, icicle);
+        // initialize the chip sets by accept mime types
+        mSearchManager.initChipSets(mState.acceptMimes);
+        // update the chip items by the mime types of the root
         mSearchManager.updateChips(getCurrentRoot().derivedMimeTypes);
         // parse the query content from intent when launch the
         // activity at the first time
@@ -206,6 +209,12 @@ public abstract class BaseActivity
             mHasQueryContentFromIntent = mSearchManager.parseQueryContentFromIntent(getIntent(),
                     mState.action);
         }
+
+        mNavigator.setSearchBarClickListener(v -> {
+            mSearchManager.onSearchBarClicked();
+            mNavigator.update();
+        });
+
         mSortController = SortController.create(this, mState.derivedMode, mState.sortModel);
 
         mPreferencesMonitor = new PreferencesMonitor(
@@ -459,14 +468,14 @@ public abstract class BaseActivity
 
         mState.derivedMode = LocalPreferences.getViewMode(this, mState.stack.getRoot(), MODE_GRID);
 
+        mNavigator.update();
+
         refreshDirectory(anim);
 
         final RootsFragment roots = RootsFragment.get(getSupportFragmentManager());
         if (roots != null) {
             roots.onCurrentRootChanged();
         }
-
-        mNavigator.update();
 
         // Causes talkback to announce the activity's new title
         setTitle(mState.stack.getTitle());
@@ -506,8 +515,8 @@ public abstract class BaseActivity
      */
     private void onDisplayAdvancedDevices() {
         boolean display = !mState.showAdvanced;
-        Metrics.logUserAction(this,
-                display ? Metrics.USER_ACTION_SHOW_ADVANCED : Metrics.USER_ACTION_HIDE_ADVANCED);
+        Metrics.logUserAction(display
+                ? MetricConsts.USER_ACTION_SHOW_ADVANCED : MetricConsts.USER_ACTION_HIDE_ADVANCED);
 
         mInjector.prefs.setShowDeviceRoot(display);
         updateDisplayAdvancedDevices(display);
@@ -528,9 +537,9 @@ public abstract class BaseActivity
      */
     void setViewMode(@ViewMode int mode) {
         if (mode == State.MODE_GRID) {
-            Metrics.logUserAction(this, Metrics.USER_ACTION_GRID);
+            Metrics.logUserAction(MetricConsts.USER_ACTION_GRID);
         } else if (mode == State.MODE_LIST) {
-            Metrics.logUserAction(this, Metrics.USER_ACTION_LIST);
+            Metrics.logUserAction(MetricConsts.USER_ACTION_LIST);
         }
 
         LocalPreferences.setViewMode(this, getCurrentRoot(), mode);
@@ -621,6 +630,22 @@ public abstract class BaseActivity
                     ? R.string.root_info_header_image_app_with_summary
                     : R.string.root_info_header_app_with_summary;
             return getString(resId, rootTitle, summary);
+        }
+    }
+
+    /**
+     * Get title string equal to the string action bar displayed.
+     * @return current directory title name
+     */
+    public String getCurrentTitle() {
+        if (!mState.stack.isInitialized()) {
+            return null;
+        }
+
+        if (mState.stack.size() > 1) {
+            return getCurrentDirectory().displayName;
+        } else {
+            return getCurrentRoot().title;
         }
     }
 
@@ -737,8 +762,7 @@ public abstract class BaseActivity
                             finish();
                         }
 
-                        Metrics.logStartupMs(
-                                BaseActivity.this, (int) (new Date().getTime() - mStartTime));
+                        Metrics.logStartupMs((int) (new Date().getTime() - mStartTime));
 
                         // Remove the idle handler.
                         return false;

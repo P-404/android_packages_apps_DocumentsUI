@@ -43,6 +43,7 @@ import com.android.documentsui.AbstractActionHandler;
 import com.android.documentsui.ActivityConfig;
 import com.android.documentsui.DocumentsAccess;
 import com.android.documentsui.Injector;
+import com.android.documentsui.MetricConsts;
 import com.android.documentsui.Metrics;
 import com.android.documentsui.Model;
 import com.android.documentsui.base.BooleanConsumer;
@@ -238,13 +239,13 @@ class ActionHandler<T extends FragmentActivity & Addons> extends AbstractActionH
 
     @Override
     public void openRoot(RootInfo root) {
-        Metrics.logRootVisited(mActivity, Metrics.PICKER_SCOPE, root);
+        Metrics.logRootVisited(MetricConsts.PICKER_SCOPE, root);
         mActivity.onRootPicked(root);
     }
 
     @Override
     public void openRoot(ResolveInfo info) {
-        Metrics.logAppVisited(mActivity, info);
+        Metrics.logAppVisited(info);
         final Intent intent = new Intent(mActivity.getIntent());
         intent.setFlags(intent.getFlags() & ~Intent.FLAG_ACTIVITY_FORWARD_RESULT);
         intent.setComponent(new ComponentName(
@@ -305,25 +306,26 @@ class ActionHandler<T extends FragmentActivity & Addons> extends AbstractActionH
         } else {
             Log.e(TAG, "Quick view intetn is null");
         }
+
+        mInjector.dialogs.showNoApplicationFound();
         return false;
     }
 
-    void pickDocument(DocumentInfo pickTarget) {
+    void pickDocument(FragmentManager fm, DocumentInfo pickTarget) {
         assert(pickTarget != null);
         Uri result;
         switch (mState.action) {
             case ACTION_OPEN_TREE:
-                result = DocumentsContract.buildTreeDocumentUri(
-                        pickTarget.authority, pickTarget.documentId);
+                mInjector.dialogs.confirmAction(fm, pickTarget, ConfirmFragment.TYPE_OEPN_TREE);
                 break;
             case ACTION_PICK_COPY_DESTINATION:
                 result = pickTarget.derivedUri;
+                finishPicking(result);
                 break;
             default:
                 // Should not be reached
                 throw new IllegalStateException("Invalid mState.action");
         }
-        finishPicking(result);
     }
 
     void saveDocument(
@@ -350,7 +352,7 @@ class ActionHandler<T extends FragmentActivity & Addons> extends AbstractActionH
         // Adding a confirmation dialog breaks an inherited CTS test (testCreateExisting), so we
         // need to add a feature flag to bypass this feature in ARC++ environment.
         if (mFeatures.isOverwriteConfirmationEnabled()) {
-            mInjector.dialogs.confirmOverwrite(fm, replaceTarget);
+            mInjector.dialogs.confirmAction(fm, replaceTarget, ConfirmFragment.TYPE_OVERWRITE);
         } else {
             finishPicking(replaceTarget.derivedUri);
         }
