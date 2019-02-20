@@ -16,6 +16,8 @@
 
 package com.android.documentsui.files;
 
+import static android.content.ContentResolver.wrap;
+
 import static com.android.documentsui.base.SharedMinimal.DEBUG;
 
 import android.content.ActivityNotFoundException;
@@ -174,7 +176,7 @@ public class ActionHandler<T extends FragmentActivity & Addons> extends Abstract
             client = DocumentsApplication.acquireUnstableProviderOrThrow(
                     resolver, document.derivedUri.getAuthority());
             Uri newUri = DocumentsContract.renameDocument(
-                    client, document.derivedUri, name);
+                    wrap(client), document.derivedUri, name);
             return DocumentInfo.fromUri(resolver, newUri);
         } catch (Exception e) {
             Log.w(TAG, "Failed to rename file", e);
@@ -427,12 +429,16 @@ public class ActionHandler<T extends FragmentActivity & Addons> extends Abstract
         }
 
         if (DEBUG) Log.d(TAG, "Launching directly into Home directory.");
-        loadHomeDir();
+        launchToDefaultLocation();
     }
 
     @Override
     protected void launchToDefaultLocation() {
-        loadHomeDir();
+        if (mFeatures.isDefaultRootInBrowseEnabled()) {
+            loadHomeDir();
+        } else {
+            loadRecent();
+        }
     }
 
     // If EXTRA_STACK is not null in intent, we'll skip other means of loading
