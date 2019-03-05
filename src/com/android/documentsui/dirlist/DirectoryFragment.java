@@ -210,7 +210,7 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
 
         mRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.refresh_layout);
         mRefreshLayout.setOnRefreshListener(this);
-        mRecView.setItemAnimator(new DirectoryItemAnimator(mActivity));
+        mRecView.setItemAnimator(new DirectoryItemAnimator());
 
         mInjector = mActivity.getInjector();
         // Initially, this selection tracker (delegator) uses a dummy implementation, so it must be
@@ -620,6 +620,9 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
     }
 
     private boolean handleMenuItemClick(MenuItem item) {
+        if (mInjector.pickResult != null) {
+            mInjector.pickResult.increaseActionCount();
+        }
         MutableSelection<String> selection = new MutableSelection<>();
         mSelectionMgr.copySelection(selection);
 
