@@ -28,6 +28,9 @@
          layouts we reduce this to an input-box adjacent to menu actions. -->
     <bool name="full_bar_search_view">true</bool>
 
+    <!-- Indicates if showing as search bar design -->
+    <bool name="show_search_bar">false</bool>
+
     <string name="default_root_uri" translatable="false">content://com.android.providers.downloads.documents/root/downloads</string>
     <!-- The value is used in sorting process on Drawer menu. If the root's package name
      start with it, the item will have higher order than others.-->
@@ -63,9 +66,15 @@
     <!-- Indicates if internal storage is shown as default or not. -->
     <bool name="config_default_show_device_root">false</bool>
 
+    <!-- Whether to show capitalize string on Button -->
+    <bool name="config_button_all_caps">true</bool>
+
     <!-- This option allows us to hide the Files app icon from launcher on Android Go device.
     Android Go device will have Files Go app for file management. -->
     <bool name="is_launcher_enabled">true</bool>
 
     <string name="scrolling_behavior" translatable="false">com.android.documentsui.ui.SearchBarScrollingViewBehavior</string>
+
+    <!-- The maximum record of search history. -->
+    <integer name="config_maximum_search_history">200</integer>
 </resources>

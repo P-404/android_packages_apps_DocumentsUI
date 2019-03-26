@@ -42,6 +42,8 @@ import androidx.annotation.VisibleForTesting;
 import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.SearchView.OnQueryTextListener;
 
+import com.android.documentsui.MetricConsts;
+import com.android.documentsui.Metrics;
 import com.android.documentsui.R;
 import com.android.documentsui.base.DocumentInfo;
 import com.android.documentsui.base.DocumentStack;
@@ -81,6 +83,7 @@ public class SearchViewManager implements
     private boolean mSearchExpanded;
     private boolean mIgnoreNextClose;
     private boolean mFullBar;
+    private boolean mIsHistorySearch;
 
     private Menu mMenu;
     private MenuItem mMenuItem;
@@ -184,6 +187,25 @@ public class SearchViewManager implements
         mChipViewManager.updateChips(acceptMimeTypes);
     }
 
+    /**
+     * Bind chip data in ChipViewManager on other view groups
+     *
+     * @param chipGroup target view group for bind ChipViewManager data
+     */
+    public void bindChips(ViewGroup chipGroup) {
+        mChipViewManager.bindMirrorGroup(chipGroup);
+    }
+
+    /**
+     * Click behavior when chip in synced chip group click.
+     *
+     * @param data SearchChipData synced in mirror group
+     */
+    public void onMirrorChipClick(SearchChipData data) {
+        mChipViewManager.onMirrorChipClick(data);
+        mSearchView.clearFocus();
+    }
+
     public void install(Menu menu, boolean isFullBarSearch) {
         mMenu = menu;
         mMenuItem = mMenu.findItem(R.id.option_menu_search);
@@ -198,7 +220,7 @@ public class SearchViewManager implements
         mSearchView.setMaxWidth(Integer.MAX_VALUE);
         mMenuItem.setOnActionExpandListener(this);
 
-        restoreSearch();
+        restoreSearch(false);
     }
 
     /**
@@ -303,6 +325,7 @@ public class SearchViewManager implements
             mQueuedSearchTask = null;
             mUiHandler.removeCallbacks(mQueuedSearchRunnable);
             mQueuedSearchRunnable = null;
+            mIsHistorySearch = false;
         }
     }
 
@@ -310,11 +333,16 @@ public class SearchViewManager implements
      * Sets search view into the searching state. Used to restore state after device orientation
      * change.
      */
-    private void restoreSearch() {
-        if (isSearching()) {
+    public void restoreSearch(boolean keepFocus) {
+        if (isTextSearching()) {
             onSearchBarClicked();
             mSearchView.setQuery(mCurrentSearch, false);
-            mSearchView.clearFocus();
+
+            if (keepFocus) {
+                mSearchView.requestFocus();
+            } else {
+                mSearchView.clearFocus();
+            }
         }
     }
 
@@ -395,6 +423,7 @@ public class SearchViewManager implements
                 mCurrentSearch = query;
                 mListener.onSearchChanged(mCurrentSearch);
             }
+            recordHistory();
             mSearchView.clearFocus();
         }
 
@@ -413,6 +442,7 @@ public class SearchViewManager implements
                 cancelSearch();
             }
         }
+        mListener.onSearchViewFocusChanged(hasFocus);
     }
 
     @VisibleForTesting
@@ -427,6 +457,7 @@ public class SearchViewManager implements
                         if (mCurrentSearch != null && mCurrentSearch.isEmpty()) {
                             mCurrentSearch = null;
                         }
+                        logTextSearchMetric();
                         mListener.onSearchChanged(mCurrentSearch);
                     };
                     mUiHandler.post(mQueuedSearchRunnable);
@@ -437,7 +468,10 @@ public class SearchViewManager implements
 
     @Override
     public boolean onQueryTextChange(String newText) {
-        performSearch(newText);
+        //Skip first search when search expanded
+        if (!(mCurrentSearch == null && newText.isEmpty())) {
+            performSearch(newText);
+        }
         return true;
     }
 
@@ -472,6 +506,43 @@ public class SearchViewManager implements
     }
 
     /**
+     * Get current text on search view.
+     *
+     * @return  Cuttent string on search view
+     */
+    public String getSearchViewText() {
+        return mSearchView.getQuery().toString();
+    }
+
+    /**
+     * Record current search for history.
+     */
+    public void recordHistory() {
+        SearchHistoryManager.getInstance(
+                mSearchView.getContext().getApplicationContext()).addHistory(mCurrentSearch);
+    }
+
+    /**
+     * Remove specific text item in history list.
+     *
+     * @param history target string for removed.
+     */
+    public void removeHistory(String history) {
+        SearchHistoryManager.getInstance(
+                mSearchView.getContext().getApplicationContext()).deleteHistory(history);
+    }
+
+    private void logTextSearchMetric() {
+        if (isTextSearching()) {
+            Metrics.logUserAction(mIsHistorySearch
+                    ? MetricConsts.USER_ACTION_SEARCH_HISTORY : MetricConsts.USER_ACTION_SEARCH);
+            Metrics.logSearchType(mIsHistorySearch
+                    ? MetricConsts.TYPE_SEARCH_HISTORY : MetricConsts.TYPE_SEARCH_STRING);
+            mIsHistorySearch = false;
+        }
+    }
+
+    /**
      * Get the query content from intent.
      * @return If has query content, return the query content. Otherwise, return null
      * @see #parseQueryContentFromIntent(Intent, int)
@@ -484,8 +555,19 @@ public class SearchViewManager implements
         mCurrentSearch = queryString;
     }
 
+    /**
+     * Set next search type is history search.
+     */
+    public void setHistorySearch() {
+        mIsHistorySearch = true;
+    }
+
     public boolean isSearching() {
         return mCurrentSearch != null || mChipViewManager.hasCheckedItems();
+    }
+
+    private boolean isTextSearching() {
+        return mCurrentSearch != null;
     }
 
     public boolean hasCheckedChip() {
@@ -504,5 +586,7 @@ public class SearchViewManager implements
         void onSearchViewChanged(boolean opened);
 
         void onSearchChipStateChanged(View v);
+
+        void onSearchViewFocusChanged(boolean hasFocus);
     }
 }

@@ -66,6 +66,7 @@ import com.android.documentsui.prefs.PreferencesMonitor;
 import com.android.documentsui.prefs.ScopedPreferences;
 import com.android.documentsui.queries.CommandInterceptor;
 import com.android.documentsui.queries.SearchChipData;
+import com.android.documentsui.queries.SearchFragment;
 import com.android.documentsui.queries.SearchViewManager;
 import com.android.documentsui.queries.SearchViewManager.SearchManagerListener;
 import com.android.documentsui.roots.ProvidersCache;
@@ -74,7 +75,6 @@ import com.android.documentsui.sorting.SortController;
 import com.android.documentsui.sorting.SortModel;
 
 import com.google.android.material.appbar.AppBarLayout;
-import com.google.android.material.chip.Chip;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -132,6 +132,11 @@ public abstract class BaseActivity
         // Record the time when onCreate is invoked for metric.
         mStartTime = new Date().getTime();
 
+        // ToDo Create tool to check resource version before applyStyle for the theme
+        // If version code is not match, we should reset overlay package to default,
+        // in case Activity continueusly encounter resource not found exception
+        getThemedContext().getTheme().applyStyle(R.style.DocumentsDefaultTheme, false);
+
         super.onCreate(icicle);
 
         final Intent intent = getIntent();
@@ -164,11 +169,6 @@ public abstract class BaseActivity
              */
             @Override
             public void onSearchChanged(@Nullable String query) {
-                if (query != null) {
-                    Metrics.logUserAction(MetricConsts.USER_ACTION_SEARCH);
-                }
-
-
                 if (mSearchManager.isSearching()) {
                     Metrics.logSearchMode(query != null, mSearchManager.hasCheckedChip());
                     if (mInjector.pickResult != null) {
@@ -197,6 +197,18 @@ public abstract class BaseActivity
                     final SearchChipData item = (SearchChipData) v.getTag();
                     Metrics.logUserAction(MetricConsts.USER_ACTION_SEARCH_CHIP);
                     Metrics.logSearchType(item.getChipType());
+                }
+            }
+
+            @Override
+            public void onSearchViewFocusChanged(boolean hasFocus) {
+                final boolean isInitailSearch
+                        = !TextUtils.isEmpty(mSearchManager.getCurrentSearch())
+                        && TextUtils.isEmpty(mSearchManager.getSearchViewText());
+                if (hasFocus && (SearchFragment.get(getSupportFragmentManager()) == null)
+                        && !isInitailSearch) {
+                    SearchFragment.showFragment(getSupportFragmentManager(),
+                            mSearchManager.getSearchViewText());
                 }
             }
         };
@@ -378,11 +390,7 @@ public abstract class BaseActivity
                     doc -> mInjector.actions.openRootDocument(doc));
         }
 
-        final AppBarLayout appBarLayout = findViewById(R.id.app_bar);
-        if (appBarLayout != null) {
-            appBarLayout.setExpanded(true);
-        }
-
+        expandAppBar();
         updateHeaderTitle();
     }
 
@@ -574,10 +582,9 @@ public abstract class BaseActivity
         LocalPreferences.setViewMode(this, getCurrentRoot(), mode);
         mState.derivedMode = mode;
 
-        // view icon needs to be updated, but we *could* do it
-        // in onOptionsItemSelected, and not do the full invalidation
-        // But! That's a larger refactoring we'll save for another day.
-        invalidateOptionsMenu();
+        final ActionMenuView subMenuView = findViewById(R.id.sub_menu);
+        mInjector.menuManager.updateSubMenu(subMenuView.getMenu());
+
         DirectoryFragment dir = getDirectoryFragment();
         if (dir != null) {
             dir.onViewModeChanged();
@@ -588,6 +595,13 @@ public abstract class BaseActivity
 
     public void setPending(boolean pending) {
         // TODO: Isolate this behavior to PickActivity.
+    }
+
+    public void expandAppBar() {
+        final AppBarLayout appBarLayout = findViewById(R.id.app_bar);
+        if (appBarLayout != null) {
+            appBarLayout.setExpanded(true);
+        }
     }
 
     public void updateHeaderTitle() {

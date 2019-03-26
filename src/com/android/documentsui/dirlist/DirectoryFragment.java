@@ -44,6 +44,7 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 
 import androidx.annotation.Nullable;
@@ -168,6 +169,7 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
 
     private float mLiveScale = 1.0f;
     private @ViewMode int mMode;
+    private int mAppBarHeight;
 
     private View mProgressBar;
 
@@ -188,6 +190,14 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
     };
 
     private final Runnable mOnDisplayStateChanged = this::onDisplayStateChanged;
+
+    private final ViewTreeObserver.OnPreDrawListener mToolbarPreDrawListener = () -> {
+        removePreDrawListener();
+        if (mAppBarHeight != getAppBarLayoutHeight()) {
+            updateLayout(mState.derivedMode);
+        }
+        return true;
+    };
 
     @Override
     public View onCreateView(
@@ -522,13 +532,13 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
         }
 
         int pad = getDirectoryPadding(mode);
-        int appBarHeight = getAppBarLayoutHeight();
-        mRecView.setPadding(pad, pad + appBarHeight, pad, pad + getSaveLayoutHeight());
+        mAppBarHeight = getAppBarLayoutHeight();
+        mRecView.setPadding(pad, mAppBarHeight, pad, getSaveLayoutHeight());
         mRecView.requestLayout();
         mIconHelper.setViewMode(mode);
 
         int range = getResources().getDimensionPixelOffset(R.dimen.refresh_icon_range);
-        mRefreshLayout.setProgressViewOffset(true, appBarHeight, appBarHeight + range);
+        mRefreshLayout.setProgressViewOffset(true, mAppBarHeight, mAppBarHeight + range);
     }
 
     private int getAppBarLayoutHeight() {
@@ -991,6 +1001,13 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
         return null;
     }
 
+    private void removePreDrawListener() {
+        final View collapsingBar = getActivity().findViewById(R.id.collapsing_toolbar);
+        if (collapsingBar != null) {
+            collapsingBar.getViewTreeObserver().removeOnPreDrawListener(mToolbarPreDrawListener);
+        }
+    }
+
     public static void showDirectory(
             FragmentManager fm, RootInfo root, DocumentInfo doc, int anim) {
         if (DEBUG) Log.d(TAG, "Showing directory: " + DocumentInfo.debugString(doc));
@@ -1089,23 +1106,10 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
                 mRestoredState = null;
             }
 
-            // Restore any previous instance state
-            final SparseArray<Parcelable> container =
-                    mState.dirConfigs.remove(mLocalState.getConfigKey());
             final int curSortedDimensionId = mState.sortModel.getSortedDimensionId();
 
             final SortDimension curSortedDimension =
                     mState.sortModel.getDimensionById(curSortedDimensionId);
-            // Default not restore to avoid app bar layout expand to confuse users.
-            if (container != null
-                    && !getArguments().getBoolean(Shared.EXTRA_IGNORE_STATE, true)) {
-                getView().restoreHierarchyState(container);
-            } else if (mLocalState.mLastSortDimensionId != curSortedDimension.getId()
-                    || mLocalState.mLastSortDimensionId == SortModel.SORT_DIMENSION_ID_UNKNOWN
-                    || mLocalState.mLastSortDirection != curSortedDimension.getSortDirection()) {
-                // Scroll to the top if the sort order actually changed.
-                mRecView.smoothScrollToPosition(0);
-            }
 
             mLocalState.mLastSortDimensionId = curSortedDimension.getId();
             mLocalState.mLastSortDirection = curSortedDimension.getSortDirection();
@@ -1121,9 +1125,18 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
                         mModel.doc != null ? mModel.doc.derivedUri : null);
                 // For orientation changed case, sometimes the docs loading comes after the menu
                 // update. We need to update the menu here to ensure the status is correct.
+                mInjector.menuManager.updateModel(mModel);
                 mInjector.menuManager.updateOptionMenu();
 
                 mActivity.updateHeaderTitle();
+                mActivity.expandAppBar();
+                // Always back to top avoid app bar layout overlay on container.
+                mRecView.scrollToPosition(0);
+
+                final View collapsingBar = getActivity().findViewById(R.id.collapsing_toolbar);
+                if (collapsingBar != null) {
+                    collapsingBar.getViewTreeObserver().addOnPreDrawListener(mToolbarPreDrawListener);
+                }
             }
         }
     }

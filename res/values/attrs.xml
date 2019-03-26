@@ -28,7 +28,7 @@
     </declare-styleable>
 
     <declare-styleable name="CardView">
-        <attr name="colorBackgroundFloating" format="color" />
+        <attr name="android:colorBackgroundFloating" format="color" />
     </declare-styleable>
 
     <declare-styleable name="DropBadgeView">
@@ -64,4 +64,12 @@
         <attr name="textCursorColor" format="reference" />
     </declare-styleable>
 
+    <declare-styleable name="SwipeRefresh">
+        <attr name="android:colorAccent" />
+    </declare-styleable>
+
+    <declare-styleable name="MaterialButtons">
+        <attr name="materialButtonStyle" format="reference" />
+        <attr name="materialButtonOutlinedStyle" format="reference"/>
+    </declare-styleable>
 </resources>

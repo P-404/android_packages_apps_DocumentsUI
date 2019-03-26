@@ -40,7 +40,7 @@ import org.junit.runner.RunWith;
  */
 @SmallTest
 @RunWith(AndroidJUnit4.class)
-abstract class ThemeUiTestBase {
+public abstract class ThemeUiTestBase {
     protected Context mTargetContext;
     protected Configuration mConfiguration;
     protected DisplayMetrics mDisplayMetrics;
@@ -80,6 +80,7 @@ abstract class ThemeUiTestBase {
         // hence, we need to create new Resources.theme to force apply again
         final Resources.Theme theme = context.getResources().newTheme();
         theme.applyStyle(R.style.DocumentsTheme, true);
+        theme.applyStyle(R.style.DocumentsDefaultTheme, false);
         return theme;
     }
 
