@@ -28,7 +28,7 @@
     <dimen name="root_action_icon_size">18dp</dimen>
     <dimen name="root_icon_disabled_alpha">?android:attr/disabledAlpha</dimen>
     <dimen name="check_icon_size">30dp</dimen>
-    <dimen name="zoom_icon_size">22dp</dimen>
+    <dimen name="zoom_icon_size">24dp</dimen>
     <dimen name="list_item_thumbnail_size">40dp</dimen>
     <dimen name="grid_item_icon_size">30dp</dimen>
     <dimen name="progress_bar_height">4dp</dimen>
@@ -115,6 +115,7 @@
     <dimen name="action_bar_size">48dp</dimen>
     <!--This value should equal actionBarSize + (2 x search_bar_margin)-->
     <dimen name="action_bar_space_height">64dp</dimen>
+    <dimen name="action_bar_space_margin">@dimen/action_bar_space_height</dimen>
 
     <dimen name="refresh_icon_range">64dp</dimen>
 </resources>
