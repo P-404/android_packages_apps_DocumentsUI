@@ -325,7 +325,8 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
 
         mRecView.setAccessibilityDelegateCompat(
                 new AccessibilityEventRouter(mRecView,
-                        (View child) -> onAccessibilityClick(child)));
+                        (View child) -> onAccessibilityClick(child),
+                        (View child) -> onAccessibilityLongClick(child)));
         mSelectionMetadata = new SelectionMetadata(mModel::getItem);
         mDetailsLookup = new DocsItemDetailsLookup(mRecView);
 
@@ -765,18 +766,27 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
 
     private boolean onAccessibilityClick(View child) {
         if (mSelectionMgr.hasSelection()) {
-            final String id = getModelId(child);
-            if (mSelectionMgr.isSelected(id)) {
-                mSelectionMgr.deselect(id);
-            } else {
-                mSelectionMgr.select(id);
-            }
+            selectItem(child);
         } else {
             DocumentHolder holder = getDocumentHolder(child);
             mActions.openItem(holder.getItemDetails(), ActionHandler.VIEW_TYPE_PREVIEW,
                 ActionHandler.VIEW_TYPE_REGULAR);
         }
         return true;
+    }
+
+    private boolean onAccessibilityLongClick(View child) {
+        selectItem(child);
+        return true;
+    }
+
+    private void selectItem(View child) {
+        final String id = getModelId(child);
+        if (mSelectionMgr.isSelected(id)) {
+            mSelectionMgr.deselect(id);
+        } else {
+            mSelectionMgr.select(id);
+        }
     }
 
     private void cancelThumbnailTask(View view) {
@@ -1085,6 +1095,15 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
         return R.id.container_directory;
     }
 
+    /**
+     *  Scroll recycler view in fregment to top
+     */
+    public void scrollToTop() {
+        if (mRecView != null) {
+            mRecView.scrollToPosition(0);
+        }
+    }
+
     @Override
     public void onRefresh() {
         // Remove thumbnail cache. We do this not because we're worried about stale thumbnails as it
@@ -1135,10 +1154,24 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
                 mRestoredState = null;
             }
 
+            // Restore any previous instance state
+            final SparseArray<Parcelable> container =
+                    mState.dirConfigs.remove(mLocalState.getConfigKey());
             final int curSortedDimensionId = mState.sortModel.getSortedDimensionId();
 
             final SortDimension curSortedDimension =
                     mState.sortModel.getDimensionById(curSortedDimensionId);
+
+            // Default not restore to avoid app bar layout expand to confuse users.
+            if (container != null
+                    && !getArguments().getBoolean(Shared.EXTRA_IGNORE_STATE, true)) {
+                getView().restoreHierarchyState(container);
+            } else if (mLocalState.mLastSortDimensionId != curSortedDimension.getId()
+                    || mLocalState.mLastSortDimensionId == SortModel.SORT_DIMENSION_ID_UNKNOWN
+                    || mLocalState.mLastSortDirection != curSortedDimension.getSortDirection()) {
+                // Scroll to the top if the sort order actually changed.
+                mRecView.smoothScrollToPosition(0);
+            }
 
             mLocalState.mLastSortDimensionId = curSortedDimension.getId();
             mLocalState.mLastSortDirection = curSortedDimension.getSortDirection();
@@ -1158,9 +1191,6 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
                 mInjector.menuManager.updateOptionMenu();
 
                 mActivity.updateHeaderTitle();
-                mActivity.expandAppBar();
-                // Always back to top avoid app bar layout overlay on container.
-                mRecView.scrollToPosition(0);
 
                 setPreDrawListener(true);
             }
