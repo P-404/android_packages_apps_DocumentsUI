@@ -51,7 +51,6 @@ import com.android.documentsui.Metrics;
 import com.android.documentsui.Model;
 import com.android.documentsui.R;
 import com.android.documentsui.TimeoutTask;
-import com.android.documentsui.base.ConfirmationCallback;
 import com.android.documentsui.base.DebugFlags;
 import com.android.documentsui.base.DocumentFilters;
 import com.android.documentsui.base.DocumentInfo;
@@ -142,6 +141,10 @@ public class ActionHandler<T extends FragmentActivity & Addons> extends Abstract
     @Override
     public void openSelectedInNewWindow() {
         Selection<String> selection = getStableSelection();
+        if (selection.isEmpty()) {
+            return;
+        }
+
         assert(selection.size() == 1);
         DocumentInfo doc = mModel.getDocument(selection.iterator().next());
         assert(doc != null);
@@ -295,56 +298,55 @@ public class ActionHandler<T extends FragmentActivity & Addons> extends Abstract
         }
     }
 
-
     @Override
-    public void deleteSelectedDocuments() {
-        Metrics.logUserAction(MetricConsts.USER_ACTION_DELETE);
+    public void showDeleteDialog() {
         Selection selection = getSelectedOrFocused();
-
         if (selection.isEmpty()) {
             return;
         }
 
-        final @Nullable DocumentInfo srcParent = mState.stack.peek();
+        DeleteDocumentFragment.show(mActivity.getSupportFragmentManager(),
+                mModel.getDocuments(selection),
+                mState.stack.peek());
+    }
 
-        // Model must be accessed in UI thread, since underlying cursor is not threadsafe.
-        List<DocumentInfo> docs = mModel.getDocuments(selection);
 
-        ConfirmationCallback result = (@ConfirmationCallback.Result int code) -> {
-            // share the news with our caller, be it good or bad.
-            mActionModeAddons.finishOnConfirmed(code);
+    @Override
+    public void deleteSelectedDocuments(List<DocumentInfo> docs, DocumentInfo srcParent) {
+        if (docs == null || docs.isEmpty()) {
+            return;
+        }
 
-            if (code != ConfirmationCallback.CONFIRM) {
-                return;
-            }
+        mActionModeAddons.finishActionMode();
 
-            UrisSupplier srcs;
-            try {
-                srcs = UrisSupplier.create(
-                        selection,
-                        mModel::getItemUri,
-                        mClipStore);
-            } catch (Exception e) {
-                Log.e(TAG,"Failed to delete a file because we were unable to get item URIs.", e);
-                mDialogs.showFileOperationStatus(
-                        FileOperations.Callback.STATUS_FAILED,
-                        FileOperationService.OPERATION_DELETE,
-                        selection.size());
-                return;
-            }
+        List<Uri> uris = new ArrayList<>(docs.size());
+        for (DocumentInfo doc : docs) {
+            uris.add(doc.derivedUri);
+        }
 
-            FileOperation operation = new FileOperation.Builder()
-                    .withOpType(FileOperationService.OPERATION_DELETE)
-                    .withDestination(mState.stack)
-                    .withSrcs(srcs)
-                    .withSrcParent(srcParent == null ? null : srcParent.derivedUri)
-                    .build();
+        UrisSupplier srcs;
+        try {
+            srcs = UrisSupplier.create(
+                    uris,
+                    mClipStore);
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to delete a file because we were unable to get item URIs.", e);
+            mDialogs.showFileOperationStatus(
+                    FileOperations.Callback.STATUS_FAILED,
+                    FileOperationService.OPERATION_DELETE,
+                    uris.size());
+            return;
+        }
 
-            FileOperations.start(mActivity, operation, mDialogs::showFileOperationStatus,
-                    FileOperations.createJobId());
-        };
+        FileOperation operation = new FileOperation.Builder()
+                .withOpType(FileOperationService.OPERATION_DELETE)
+                .withDestination(mState.stack)
+                .withSrcs(srcs)
+                .withSrcParent(srcParent == null ? null : srcParent.derivedUri)
+                .build();
 
-        mDialogs.confirmDelete(docs, result);
+        FileOperations.start(mActivity, operation, mDialogs::showFileOperationStatus,
+                FileOperations.createJobId());
     }
 
     @Override
@@ -352,8 +354,9 @@ public class ActionHandler<T extends FragmentActivity & Addons> extends Abstract
         Metrics.logUserAction(MetricConsts.USER_ACTION_SHARE);
 
         Selection<String> selection = getStableSelection();
-
-        assert(!selection.isEmpty());
+        if (selection.isEmpty()) {
+            return;
+        }
 
         // Model must be accessed in UI thread, since underlying cursor is not threadsafe.
         List<DocumentInfo> docs = mModel.loadDocuments(
@@ -701,19 +704,18 @@ public class ActionHandler<T extends FragmentActivity & Addons> extends Abstract
         // treatment, thusly the "isDownloads" check.
 
         // Launch MANAGE_DOCUMENTS only for the root level files, so it's not called for
-        // files in archives. Also, if the activity is already browsing a ZIP from downloads,
-        // then skip MANAGE_DOCUMENTS.
+        // files in archives or in child folders. Also, if the activity is already browsing
+        // a ZIP from downloads, then skip MANAGE_DOCUMENTS.
         if (Intent.ACTION_VIEW.equals(mActivity.getIntent().getAction())
                 && mState.stack.size() > 1) {
             // viewing the contents of an archive.
             return false;
         }
 
-        // management is only supported in downloads.
-        if (mActivity.getCurrentRoot().isDownloads()) {
-            // and only and only on APKs or partial files.
-            return MimeTypes.isApkType(doc.mimeType)
-                    || doc.isPartial();
+        // management is only supported in Downloads root or downloaded files show in Recent root.
+        if (Providers.AUTHORITY_DOWNLOADS.equals(doc.authority)) {
+            // only on APKs or partial files.
+            return MimeTypes.isApkType(doc.mimeType) || doc.isPartial();
         }
 
         return false;
@@ -728,7 +730,7 @@ public class ActionHandler<T extends FragmentActivity & Addons> extends Abstract
         // established, we set the same permission for non-managed files
         // This ensures consistent behavior between the Downloads root
         // and other roots.
-        int flags = Intent.FLAG_GRANT_READ_URI_PERMISSION;
+        int flags = Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_SINGLE_TOP;
         if (doc.isWriteSupported()) {
             flags |= Intent.FLAG_GRANT_WRITE_URI_PERMISSION;
         }

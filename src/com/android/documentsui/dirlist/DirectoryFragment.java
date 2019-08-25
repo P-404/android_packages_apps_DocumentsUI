@@ -171,6 +171,7 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
     private float mLiveScale = 1.0f;
     private @ViewMode int mMode;
     private int mAppBarHeight;
+    private int mSaveLayoutHeight;
 
     private View mProgressBar;
 
@@ -193,8 +194,9 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
     private final Runnable mOnDisplayStateChanged = this::onDisplayStateChanged;
 
     private final ViewTreeObserver.OnPreDrawListener mToolbarPreDrawListener = () -> {
-        setPreDrawListener(false);
-        if (mAppBarHeight != getAppBarLayoutHeight()) {
+        setPreDrawListenerEnabled(false);
+        if (mAppBarHeight != getAppBarLayoutHeight()
+                || mSaveLayoutHeight != getSaveLayoutHeight()) {
             updateLayout(mState.derivedMode);
         }
         return true;
@@ -269,7 +271,7 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
 
         mModel.removeUpdateListener(mModelUpdateListener);
         mModel.removeUpdateListener(mAdapter.getModelUpdateListener());
-        setPreDrawListener(false);
+        setPreDrawListenerEnabled(false);
 
         super.onDestroyView();
     }
@@ -323,10 +325,6 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
         mFocusManager = mInjector.getFocusManager(mRecView, mModel);
         mActions = mInjector.getActionHandler(mContentLock);
 
-        mRecView.setAccessibilityDelegateCompat(
-                new AccessibilityEventRouter(mRecView,
-                        (View child) -> onAccessibilityClick(child),
-                        (View child) -> onAccessibilityLongClick(child)));
         mSelectionMetadata = new SelectionMetadata(mModel::getItem);
         mDetailsLookup = new DocsItemDetailsLookup(mRecView);
 
@@ -534,9 +532,10 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
             mLayout.setSpanCount(mColumnCount);
         }
 
-        int pad = getDirectoryPadding(mode);
+        final int innerPadding = getResources().getDimensionPixelSize(R.dimen.container_padding);
         mAppBarHeight = getAppBarLayoutHeight();
-        mRecView.setPadding(pad, mAppBarHeight, pad, getSaveLayoutHeight());
+        mSaveLayoutHeight = getSaveLayoutHeight();
+        mRecView.setPadding(innerPadding, mAppBarHeight, innerPadding, mSaveLayoutHeight);
         mRecView.requestLayout();
         mIconHelper.setViewMode(mode);
 
@@ -625,17 +624,6 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
         return (int) (getResources().getDimensionPixelSize(id) * mLiveScale);
     }
 
-    private int getDirectoryPadding(@ViewMode int mode) {
-        switch (mode) {
-            case MODE_GRID:
-                return getResources().getDimensionPixelSize(R.dimen.grid_container_padding);
-            case MODE_LIST:
-                return getResources().getDimensionPixelSize(R.dimen.list_container_padding);
-            default:
-                throw new IllegalArgumentException("Unsupported layout mode: " + mode);
-        }
-    }
-
     private boolean handleMenuItemClick(MenuItem item) {
         if (mInjector.pickResult != null) {
             mInjector.pickResult.increaseActionCount();
@@ -668,7 +656,7 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
             case R.id.dir_menu_delete:
                 // deleteDocuments will end action mode if the documents are deleted.
                 // It won't end action mode if user cancels the delete.
-                mActions.deleteSelectedDocuments();
+                mActions.showDeleteDialog();
                 return true;
 
             case R.id.action_menu_copy_to:
@@ -800,6 +788,10 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
     private void openDocuments(final Selection selected) {
         Metrics.logUserAction(MetricConsts.USER_ACTION_OPEN);
 
+        if (selected.isEmpty()) {
+            return;
+        }
+
         // Model must be accessed in UI thread, since underlying cursor is not threadsafe.
         List<DocumentInfo> docs = mModel.getDocuments(selected);
         if (docs.size() > 1) {
@@ -812,6 +804,10 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
     private void showChooserForDoc(final Selection<String> selected) {
         Metrics.logUserAction(MetricConsts.USER_ACTION_OPEN);
 
+        if (selected.isEmpty()) {
+            return;
+        }
+
         assert selected.size() == 1;
         DocumentInfo doc =
                 DocumentInfo.fromDirectoryCursor(mModel.getItem(selected.iterator().next()));
@@ -821,6 +817,10 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
     private void transferDocuments(
             final Selection<String> selected, @Nullable DocumentStack destination,
             final @OpType int mode) {
+        if (selected.isEmpty()) {
+            return;
+        }
+
         switch (mode) {
             case FileOperationService.OPERATION_COPY:
                 Metrics.logUserAction(MetricConsts.USER_ACTION_COPY_TO);
@@ -933,6 +933,10 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
     private void renameDocuments(Selection selected) {
         Metrics.logUserAction(MetricConsts.USER_ACTION_RENAME);
 
+        if (selected.isEmpty()) {
+            return;
+        }
+
         // Batch renaming not supported
         // Rename option is only available in menu when 1 document selected
         assert selected.size() == 1;
@@ -960,6 +964,9 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
     }
 
     public void pasteIntoFolder() {
+        if (mSelectionMgr.getSelection().isEmpty()) {
+            return;
+        }
         assert (mSelectionMgr.getSelection().size() == 1);
 
         String modelId = mSelectionMgr.getSelection().iterator().next();
@@ -1028,17 +1035,19 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
         return null;
     }
 
-    private void setPreDrawListener(boolean enable) {
+    /**
+    * Add or remove mToolbarPreDrawListener implement on DirectoryFragment to ViewTreeObserver.
+    */
+    public void setPreDrawListenerEnabled(boolean enable) {
         if (mActivity == null) {
             return;
         }
 
         final View bar = mActivity.findViewById(R.id.collapsing_toolbar);
         if (bar != null) {
+            bar.getViewTreeObserver().removeOnPreDrawListener(mToolbarPreDrawListener);
             if (enable) {
                 bar.getViewTreeObserver().addOnPreDrawListener(mToolbarPreDrawListener);
-            } else {
-                bar.getViewTreeObserver().removeOnPreDrawListener(mToolbarPreDrawListener);
             }
         }
     }
@@ -1201,7 +1210,7 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
 
                 mActivity.updateHeaderTitle();
 
-                setPreDrawListener(true);
+                setPreDrawListenerEnabled(true);
             }
         }
     }
@@ -1257,6 +1266,10 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
         @Override
         public void onBindDocumentHolder(DocumentHolder holder, Cursor cursor) {
             setupDragAndDropOnDocumentView(holder.itemView, cursor);
+            holder.itemView.setAccessibilityDelegate(new AccessibilityEventRouter(
+                    DirectoryFragment.this::onAccessibilityClick,
+                    DirectoryFragment.this::onAccessibilityLongClick
+            ));
         }
 
         @Override

@@ -52,7 +52,6 @@ import androidx.fragment.app.Fragment;
 import com.android.documentsui.AbstractActionHandler.CommonAddons;
 import com.android.documentsui.Injector.Injected;
 import com.android.documentsui.NavigationViewManager.Breadcrumb;
-import com.android.documentsui.R;
 import com.android.documentsui.base.DocumentInfo;
 import com.android.documentsui.base.EventHandler;
 import com.android.documentsui.base.RootInfo;
@@ -388,6 +387,11 @@ public abstract class BaseActivity
             View rootsContainer = findViewById(R.id.container_roots);
             rootsContainer.setPadding(0, 0, 0, insets.getSystemWindowInsetBottom());
 
+            DirectoryFragment fragment = getDirectoryFragment();
+            if (fragment != null) {
+                fragment.setPreDrawListenerEnabled(true);
+            }
+
             return insets.consumeSystemWindowInsets();
         });
 
@@ -411,7 +415,7 @@ public abstract class BaseActivity
         mSearchManager.cancelSearch();
 
         // Skip refreshing if root nor directory didn't change
-        if (root.equals(getCurrentRoot()) && mState.stack.size() == 1) {
+        if (root.equals(getCurrentRoot()) && mState.stack.size() <= 1) {
             return;
         }
 
@@ -642,8 +646,14 @@ public abstract class BaseActivity
         mSortController.onViewModeChanged(mode);
     }
 
-    public void setPending(boolean pending) {
-        // TODO: Isolate this behavior to PickActivity.
+    /**
+     * Reload documnets by current stack in certain situation.
+     */
+    public void reloadDocumentsIfNeeded() {
+        if (isInRecents() || mSearchManager.isSearching()) {
+            // Both using MultiRootDocumentsLoader which have not ContentObserver.
+            mInjector.actions.loadDocumentsForCurrentStack();
+        }
     }
 
     public void expandAppBar() {
