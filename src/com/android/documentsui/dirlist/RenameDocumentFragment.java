@@ -170,7 +170,7 @@ public class RenameDocumentFragment extends DialogFragment {
      */
     private void selectFileName(EditText editText) {
         String text = editText.getText().toString();
-        int separatorIndex = text.indexOf(".");
+        int separatorIndex = text.lastIndexOf(".");
         editText.setSelection(0,
                 (separatorIndex == -1 || mDocument.isDirectory()) ? text.length() : separatorIndex);
     }
@@ -230,6 +230,7 @@ public class RenameDocumentFragment extends DialogFragment {
             if (mDialog != null) {
                 mDialog.dismiss();
             }
+            mActivity.getInjector().selectionMgr.clearSelection();
             mActivity.reloadDocumentsIfNeeded();
         }
     }

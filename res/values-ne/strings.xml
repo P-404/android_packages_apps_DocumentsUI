@@ -36,6 +36,7 @@
     <string name="menu_share" msgid="4307140947108068356">"साझेदारी गर्नुहोस्"</string>
     <string name="menu_delete" msgid="1022254131543256626">"मेट्नुहोस्"</string>
     <string name="menu_select_all" msgid="7600576812185570403">"सबैलाई चयन गर्नुहोस्"</string>
+    <string name="menu_deselect_all" msgid="7729916068862742979">"सबै चयन रद्द गर्नुहोस्"</string>
     <string name="menu_select" msgid="1366061076507142387">"चयन गर्नुहोस्"</string>
     <string name="menu_sort" msgid="3362419226163725275">"यसअनुसार क्रमबद्ध गर्नु..."</string>
     <string name="menu_copy" msgid="7404820171352314754">"यसमा प्रतिलिपि बनाउनु…"</string>
@@ -237,6 +238,8 @@
     <string name="chip_title_audio" msgid="1032801828748235436">"अडियो"</string>
     <string name="chip_title_videos" msgid="7011260091979776447">"भिडियोहरू"</string>
     <string name="chip_title_documents" msgid="7432457563000753983">"कागजातहरू"</string>
+    <string name="chip_title_large_files" msgid="7740269190493883980">"ठूला फाइलहरू"</string>
+    <string name="chip_title_from_this_week" msgid="8357992108715162135">"यो हप्तादेखि"</string>
     <string name="input_hint_new_folder" msgid="479672411219725677">"फोल्डरको नाम"</string>
     <string name="input_hint_rename" msgid="8390711744270994452">"नयाँ नाम"</string>
     <string name="preview_file" msgid="4056622696305432343">"<xliff:g id="FILENAME">%1$s</xliff:g> फाइलको पूर्वावलोकन गर्नुहोस्‌"</string>

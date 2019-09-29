@@ -247,7 +247,7 @@ public abstract class BaseActivity
 
         ViewGroup chipGroup = findViewById(R.id.search_chip_group);
         mSearchManager = new SearchViewManager(searchListener, queryInterceptor,
-                chipGroup, icicle);
+                chipGroup, icicle, mInjector.prefs::isRecordSearch);
         // initialize the chip sets by accept mime types
         mSearchManager.initChipSets(mState.acceptMimes);
         // update the chip items by the mime types of the root
@@ -386,11 +386,6 @@ public abstract class BaseActivity
 
             View rootsContainer = findViewById(R.id.container_roots);
             rootsContainer.setPadding(0, 0, 0, insets.getSystemWindowInsetBottom());
-
-            DirectoryFragment fragment = getDirectoryFragment();
-            if (fragment != null) {
-                fragment.setPreDrawListenerEnabled(true);
-            }
 
             return insets.consumeSystemWindowInsets();
         });

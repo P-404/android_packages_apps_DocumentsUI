@@ -57,6 +57,8 @@
     <string name="menu_delete">Delete</string>
     <!-- Menu item title that selects all documents in the current directory [CHAR LIMIT=28] -->
     <string name="menu_select_all">Select all</string>
+    <!-- Menu item title that deselects all documents in the current directory [CHAR LIMIT=28] -->
+    <string name="menu_deselect_all">Deselect all</string>
     <!-- Menu item title that selects documents in the current directory [CHAR LIMIT=28] -->
     <string name="menu_select">Select</string>
     <!-- Menu item title that sort documents in the current directory [CHAR LIMIT=28] -->
@@ -431,6 +433,10 @@
     <string name="chip_title_videos">Videos</string>
     <!-- Title for image chip. [CHAR_LIMIT=25] -->
     <string name="chip_title_documents">Documents</string>
+    <!-- Title for large file chip. [CHAR_LIMIT=25] -->
+    <string name="chip_title_large_files">Large files</string>
+    <!-- Title for from this week chip. [CHAR_LIMIT=25] -->
+    <string name="chip_title_from_this_week">From this week</string>
 
     <!-- Hint on text input field for create new folder. [CHAR_LIMIT=48] -->
     <string name="input_hint_new_folder">Folder name</string>
