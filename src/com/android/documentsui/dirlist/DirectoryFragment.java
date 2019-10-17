@@ -194,10 +194,14 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
     private final Runnable mOnDisplayStateChanged = this::onDisplayStateChanged;
 
     private final ViewTreeObserver.OnPreDrawListener mToolbarPreDrawListener = () -> {
-        setPreDrawListenerEnabled(false);
-        if (mAppBarHeight != getAppBarLayoutHeight()
-                || mSaveLayoutHeight != getSaveLayoutHeight()) {
+        final boolean appBarHeightChanged = mAppBarHeight != getAppBarLayoutHeight();
+        if (appBarHeightChanged || mSaveLayoutHeight != getSaveLayoutHeight()) {
             updateLayout(mState.derivedMode);
+
+            if (appBarHeightChanged) {
+                scrollToTop();
+            }
+            return false;
         }
         return true;
     };
@@ -254,6 +258,8 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
         }
         // Make the recycler and the empty views responsive to drop events when allowed.
         mRecView.setOnDragListener(mDragHoverListener);
+
+        setPreDrawListenerEnabled(true);
 
         return view;
     }
@@ -449,7 +455,8 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
             // TODO: inject DirectoryDetails into MenuManager constructor
             // Since both classes are supplied by Activity and created
             // at the same time.
-            mInjector.menuManager.inflateContextMenuForContainer(menu, inflater);
+            mInjector.menuManager.inflateContextMenuForContainer(
+                    menu, inflater, mSelectionMetadata);
         } else {
             mInjector.menuManager.inflateContextMenuForDocs(
                     menu, inflater, mSelectionMetadata);
@@ -724,11 +731,13 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
                 mActions.selectAllFiles();
                 return true;
 
+            case R.id.action_menu_deselect_all:
+            case R.id.dir_menu_deselect_all:
+                mActions.deselectAllFiles();
+                return true;
+
             case R.id.action_menu_rename:
             case R.id.dir_menu_rename:
-                // Exit selection mode first, so we avoid deselecting deleted
-                // (renamed) documents.
-                mActionModeController.finishActionMode();
                 renameDocuments(selection);
                 return true;
 
@@ -893,7 +902,7 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
                 throw new UnsupportedOperationException("Unknown mode: " + mode);
         }
 
-        intent.putExtra(DocumentsContract.EXTRA_PROMPT, getResources().getString(drawerTitleId));
+        intent.putExtra(DocumentsContract.EXTRA_PROMPT, drawerTitleId);
 
         // Model must be accessed in UI thread, since underlying cursor is not threadsafe.
         List<DocumentInfo> docs = mModel.getDocuments(selected);
@@ -1209,8 +1218,6 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
                 mInjector.menuManager.updateOptionMenu();
 
                 mActivity.updateHeaderTitle();
-
-                setPreDrawListenerEnabled(true);
             }
         }
     }

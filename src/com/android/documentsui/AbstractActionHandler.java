@@ -302,6 +302,11 @@ public abstract class AbstractActionHandler<T extends FragmentActivity & CommonA
     }
 
     @Override
+    public void deselectAllFiles() {
+        mSelectionMgr.clearSelection();
+    }
+
+    @Override
     public void showCreateDirectoryDialog() {
         Metrics.logUserAction(MetricConsts.USER_ACTION_CREATE_DIR);
 
@@ -589,11 +594,15 @@ public abstract class AbstractActionHandler<T extends FragmentActivity & CommonA
             Context context = mActivity;
 
             if (mState.stack.isRecents()) {
+                final LockingContentObserver observer = new LockingContentObserver(
+                        mContentLock, AbstractActionHandler.this::loadDocumentsForCurrentStack);
+                MultiRootDocumentsLoader loader;
+
                 if (mSearchMgr.isSearching()) {
                     if (DEBUG) {
                         Log.d(TAG, "Creating new GlobalSearchLoader.");
                     }
-                    return new GlobalSearchLoader(
+                    loader = new GlobalSearchLoader(
                             context,
                             mProviders,
                             mState,
@@ -604,13 +613,15 @@ public abstract class AbstractActionHandler<T extends FragmentActivity & CommonA
                     if (DEBUG) {
                         Log.d(TAG, "Creating new loader recents.");
                     }
-                    return new RecentsLoader(
+                    loader =  new RecentsLoader(
                             context,
                             mProviders,
                             mState,
                             mExecutors,
                             mInjector.fileTypeLookup);
                 }
+                loader.setObserver(observer);
+                return loader;
             } else {
                 Uri contentsUri = mSearchMgr.isSearching()
                         ? DocumentsContract.buildSearchDocumentsUri(

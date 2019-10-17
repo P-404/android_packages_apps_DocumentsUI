@@ -36,6 +36,7 @@
     <string name="menu_share" msgid="4307140947108068356">"ចែករំលែក​"</string>
     <string name="menu_delete" msgid="1022254131543256626">"លុប"</string>
     <string name="menu_select_all" msgid="7600576812185570403">"ជ្រើស​រើសទាំងអស់"</string>
+    <string name="menu_deselect_all" msgid="7729916068862742979">"ដក​ការជ្រើសរើស​ទាំងអស់"</string>
     <string name="menu_select" msgid="1366061076507142387">"ជ្រើសរើស"</string>
     <string name="menu_sort" msgid="3362419226163725275">"តម្រៀប​តាម..."</string>
     <string name="menu_copy" msgid="7404820171352314754">"ចម្លងទៅ…"</string>
@@ -237,6 +238,8 @@
     <string name="chip_title_audio" msgid="1032801828748235436">"សំឡេង"</string>
     <string name="chip_title_videos" msgid="7011260091979776447">"វីដេអូ"</string>
     <string name="chip_title_documents" msgid="7432457563000753983">"ឯកសារ"</string>
+    <string name="chip_title_large_files" msgid="7740269190493883980">"ឯកសារទំហំធំ"</string>
+    <string name="chip_title_from_this_week" msgid="8357992108715162135">"ពីសប្ដាហ៍នេះ"</string>
     <string name="input_hint_new_folder" msgid="479672411219725677">"ឈ្មោះ​ថត"</string>
     <string name="input_hint_rename" msgid="8390711744270994452">"ឈ្មោះ​ថ្មី"</string>
     <string name="preview_file" msgid="4056622696305432343">"មើលឯកសារ <xliff:g id="FILENAME">%1$s</xliff:g> សាកល្បង"</string>

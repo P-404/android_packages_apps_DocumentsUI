@@ -36,6 +36,7 @@
     <string name="menu_share" msgid="4307140947108068356">"اشتراک کریں"</string>
     <string name="menu_delete" msgid="1022254131543256626">"حذف کریں"</string>
     <string name="menu_select_all" msgid="7600576812185570403">"سبھی کو منتخب کریں"</string>
+    <string name="menu_deselect_all" msgid="7729916068862742979">"سبھی غیر منتخب کریں"</string>
     <string name="menu_select" msgid="1366061076507142387">"منتخب کریں"</string>
     <string name="menu_sort" msgid="3362419226163725275">"ترتیب دیں بلحاظ..."</string>
     <string name="menu_copy" msgid="7404820171352314754">"اس میں کاپی کریں…"</string>
@@ -237,6 +238,8 @@
     <string name="chip_title_audio" msgid="1032801828748235436">"آڈیو"</string>
     <string name="chip_title_videos" msgid="7011260091979776447">"ویڈیوز"</string>
     <string name="chip_title_documents" msgid="7432457563000753983">"دستاویزات"</string>
+    <string name="chip_title_large_files" msgid="7740269190493883980">"بڑی فائلیں"</string>
+    <string name="chip_title_from_this_week" msgid="8357992108715162135">"اس ہفتے سے"</string>
     <string name="input_hint_new_folder" msgid="479672411219725677">"فولڈر کا نام"</string>
     <string name="input_hint_rename" msgid="8390711744270994452">"نیا نام"</string>
     <string name="preview_file" msgid="4056622696305432343">"فائل <xliff:g id="FILENAME">%1$s</xliff:g> کا پیش منظر"</string>
