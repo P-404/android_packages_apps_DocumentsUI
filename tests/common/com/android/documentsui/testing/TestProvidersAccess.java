@@ -43,6 +43,7 @@ public class TestProvidersAccess implements ProvidersAccess {
     public static final RootInfo AUDIO;
     public static final RootInfo VIDEO;
     public static final RootInfo EXTERNALSTORAGE;
+    public static final RootInfo NO_TREE_ROOT;
 
 
     static {
@@ -55,7 +56,6 @@ public class TestProvidersAccess implements ProvidersAccess {
         DOWNLOADS.derivedType = RootInfo.TYPE_DOWNLOADS;
         DOWNLOADS.flags = Root.FLAG_LOCAL_ONLY
                 | Root.FLAG_SUPPORTS_CREATE
-                | Root.FLAG_SUPPORTS_IS_CHILD
                 | Root.FLAG_SUPPORTS_RECENTS;
 
         HOME = new RootInfo();
@@ -80,12 +80,14 @@ public class TestProvidersAccess implements ProvidersAccess {
         PICKLES.rootId = "pickles";
         PICKLES.title = "Pickles";
 
-        RECENTS = new RootInfo() {{
-            // Special root for recents
-            derivedType = RootInfo.TYPE_RECENTS;
-            flags = Root.FLAG_LOCAL_ONLY | Root.FLAG_SUPPORTS_IS_CHILD;
-            availableBytes = -1;
-        }};
+        RECENTS = new RootInfo() {
+            {
+                // Special root for recents
+                derivedType = RootInfo.TYPE_RECENTS;
+                flags = Root.FLAG_LOCAL_ONLY;
+                availableBytes = -1;
+            }
+        };
         RECENTS.title = "Recents";
 
         INSPECTOR = new RootInfo();
@@ -118,6 +120,15 @@ public class TestProvidersAccess implements ProvidersAccess {
         EXTERNALSTORAGE.rootId = Providers.ROOT_ID_DEVICE;
         EXTERNALSTORAGE.title = "Device";
         EXTERNALSTORAGE.derivedType = RootInfo.TYPE_LOCAL;
+        EXTERNALSTORAGE.flags = Root.FLAG_LOCAL_ONLY
+                | Root.FLAG_SUPPORTS_IS_CHILD;
+
+        NO_TREE_ROOT = new RootInfo();
+        NO_TREE_ROOT.authority = "no.tree.authority";
+        NO_TREE_ROOT.rootId = "1";
+        NO_TREE_ROOT.title = "No Tree Title";
+        NO_TREE_ROOT.derivedType = RootInfo.TYPE_LOCAL;
+        NO_TREE_ROOT.flags = Root.FLAG_LOCAL_ONLY;
     }
 
     public final Map<String, Collection<RootInfo>> roots = new HashMap<>();
@@ -128,6 +139,8 @@ public class TestProvidersAccess implements ProvidersAccess {
         add(HOME);
         add(HAMMY);
         add(PICKLES);
+        add(EXTERNALSTORAGE);
+        add(NO_TREE_ROOT);
     }
 
     private void add(RootInfo root) {
@@ -142,6 +155,7 @@ public class TestProvidersAccess implements ProvidersAccess {
         pm.addStubContentProviderForRoot(TestProvidersAccess.HOME);
         pm.addStubContentProviderForRoot(TestProvidersAccess.HAMMY);
         pm.addStubContentProviderForRoot(TestProvidersAccess.PICKLES);
+        pm.addStubContentProviderForRoot(TestProvidersAccess.NO_TREE_ROOT);
     }
 
     @Override

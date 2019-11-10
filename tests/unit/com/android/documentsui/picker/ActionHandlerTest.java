@@ -218,13 +218,32 @@ public class ActionHandlerTest {
     }
 
     @Test
-    public void testInitLocation_DefaultToDownloads_ActionOpenTree() throws Exception {
-        testInitLocationDefaultToDownloadsOnAction(State.ACTION_OPEN_TREE);
+    public void testInitLocation_DefaultsToDownloads_ActionCreate() throws Exception {
+        testInitLocationDefaultToDownloadsOnAction(State.ACTION_CREATE);
     }
 
     @Test
-    public void testInitLocation_DefaultsToDownloads_ActionCreate() throws Exception {
-        testInitLocationDefaultToDownloadsOnAction(State.ACTION_CREATE);
+    public void testInitLocation_DefaultToDeviceRoot_ActionOpenTree() throws Exception {
+        mEnv.state.action = State.ACTION_OPEN_TREE;
+
+        mHandler.initLocation(mActivity.getIntent());
+
+        assertRootPicked(TestProvidersAccess.EXTERNALSTORAGE.getUri());
+    }
+
+    @Test
+    public void testInitLocation_DefaultToDeviceRoot_ActionOpenTree_RootDoesNotSupportChildren()
+            throws Exception {
+        mEnv.state.action = State.ACTION_OPEN_TREE;
+
+        String authority = TestProvidersAccess.NO_TREE_ROOT.authority;
+        String rootId = TestProvidersAccess.NO_TREE_ROOT.rootId;
+        Uri hintUri = DocumentsContract.buildRootUri(authority, rootId);
+
+        mActivity.getIntent().putExtra(DocumentsContract.EXTRA_INITIAL_URI, hintUri);
+        mHandler.initLocation(mActivity.getIntent());
+
+        assertRootPicked(TestProvidersAccess.EXTERNALSTORAGE.getUri());
     }
 
     @Test
