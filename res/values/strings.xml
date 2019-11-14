@@ -196,7 +196,7 @@
     <string name="toast_view_in_archives_unsupported">Cannot open files in archives</string>
     <!-- Toast shown when some of the selected documents failed to be deleted [CHAR LIMIT=48] -->
     <string name="toast_failed_delete">Unable to delete some documents</string>
-    <!-- Toast shown when user want to share files amount over limit [CHAR LIMIT=48] -->
+    <!-- Toast shown when user want to share files amount over limit [CHAR LIMIT=60] -->
     <string name="toast_share_over_limit">Can\u2019t share more than <xliff:g id="count" example="1">%1$d</xliff:g> files</string>
 
     <!-- Title of dialog when prompting user to select an app to share documents with [CHAR LIMIT=32] -->
@@ -414,6 +414,8 @@
     <string name="root_info_header_downloads">Files in Downloads</string>
     <!-- Header title for list of documents in storage type root. [CHAR_LIMIT=60] -->
     <string name="root_info_header_storage">Files on <xliff:g id="device" example="Pixel">%1$s</xliff:g></string>
+    <!-- Header title for list of documents in folder. [CHAR_LIMIT=60] -->
+    <string name="root_info_header_folder">Files in <xliff:g id="folder" example="DCIM">%1$s</xliff:g></string>
     <!-- Header title for list of documents 3rd party provider root eg. Drive, Box. [CHAR_LIMIT=60] -->
     <string name="root_info_header_app">Files from <xliff:g id="label" example="Drive">%1$s</xliff:g></string>
     <!-- Header title for list of documents 3rd party provider root eg. Drive, Box. with root summary. The summary is usually present by email account[CHAR_LIMIT=60] -->
@@ -426,6 +428,8 @@
     <string name="root_info_header_image_downloads">Images in Downloads</string>
     <!-- On photo picking state, the header title for list of documents in storage type root. [CHAR_LIMIT=60] -->
     <string name="root_info_header_image_storage">Images on <xliff:g id="device" example="Pixel">%1$s</xliff:g></string>
+    <!-- On photo picking state, the header title for list of documents in folder. [CHAR_LIMIT=60] -->
+    <string name="root_info_header_image_folder">Images in <xliff:g id="folder" example="DCIM">%1$s</xliff:g></string>
     <!-- On photo picking state, the header title for list of documents 3rd party provider root eg. Drive, Box. [CHAR_LIMIT=60] -->
     <string name="root_info_header_image_app">Images from <xliff:g id="label" example="Drive">%1$s</xliff:g></string>
     <!-- On photo picking state, the header title for list of documents 3rd party provider root eg. Drive, Box. with root summary. The summary is usually present by email account[CHAR_LIMIT=60] -->
@@ -442,7 +446,7 @@
     <!-- Title for large file chip. [CHAR_LIMIT=25] -->
     <string name="chip_title_large_files">Large files</string>
     <!-- Title for from this week chip. [CHAR_LIMIT=25] -->
-    <string name="chip_title_from_this_week">From this week</string>
+    <string name="chip_title_from_this_week">This week</string>
 
     <!-- Hint on text input field for create new folder. [CHAR_LIMIT=48] -->
     <string name="input_hint_new_folder">Folder name</string>
@@ -458,11 +462,11 @@
     <!-- The default name to present the anonymous application-->
     <string name="anonymous_application">Anonymous</string>
     <!-- Button text show on open document tree flow. [CHAR_LIMIT=48] -->
-    <string name="open_tree_button">Allow access to \"<xliff:g id="directory" example="DCIM">%1$s</xliff:g>\"</string>
-    <!-- Confrim dialog title show on open document tree flow. [CHAR_LIMIT=60] -->
-    <string name="open_tree_dialog_title">Allow access to \"<xliff:g id="directory" example="DCIM">%1$s</xliff:g>\" in \"<xliff:g id="root" example="SD card">%2$s</xliff:g>\"?</string>
+    <string name="open_tree_button">Use this folder</string>
+    <!-- Confrim dialog title show on open document tree flow. [CHAR_LIMIT=80] -->
+    <string name="open_tree_dialog_title">Allow <xliff:g id="appName" example="Drive">%1$s</xliff:g> to access files in <xliff:g id="directory" example="DCIM">%2$s</xliff:g>?</string>
     <!-- Confrim dialog message show on open document tree flow.-->
-    <string name="open_tree_dialog_message">It will allow \"<xliff:g id="appName" example="Drive">%1$s</xliff:g>\" to have full access to all files currently stored under this location, and any future content stored here.</string>
+    <string name="open_tree_dialog_message">This will let <xliff:g id="appName" example="Drive">%1$s</xliff:g> access current and future content stored in <xliff:g id="directory" example="DCIM">%2$s</xliff:g>.</string>
 
     <!-- Search hint on search view. [CHAR LIMIT=48] -->
     <string name="search_bar_hint">Search this phone</string>
