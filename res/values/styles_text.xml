@@ -36,9 +36,14 @@
     </style>
 
     <style name="AppsItemText">
-        <item name="android:textColor">?android:attr/textColorSecondary</item>
+        <item name="android:textColor">?android:attr/textColorPrimary</item>
         <item name="android:textSize">12sp</item>
         <item name="fontFamily">@string/config_fontFamily</item>
+    </style>
+
+    <style name="AppsItemSubText">
+        <item name="android:textColor">?android:attr/textColorSecondary</item>
+        <item name="android:textSize">11sp</item>
     </style>
 
     <style name="AutoCompleteText" parent="@style/TextAppearance.AppCompat.Medium">
@@ -76,6 +81,12 @@
 
     <style name="MaterialButtonTextAppearance" parent="@style/TextAppearance.MaterialComponents.Button">
         <item name="android:textAllCaps">@bool/config_button_all_caps</item>
+        <item name="fontFamily">@string/config_fontFamilyMedium</item>
+    </style>
+
+    <style name="BreadcrumbText" parent="@style/TextAppearance.Widget.AppCompat.Toolbar.Subtitle">
+        <item name="android:textColor">?android:attr/colorControlNormal</item>
+        <item name="android:textSize">14sp</item>
         <item name="fontFamily">@string/config_fontFamilyMedium</item>
     </style>
 
