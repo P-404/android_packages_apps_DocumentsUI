@@ -66,12 +66,6 @@ public final class Shared {
     public static final String METADATA_VIDEO_LONGITUTE = "android.media.metadata.video:longitude";
 
     /**
-     * Extra boolean flag for {@link #ACTION_PICK_COPY_DESTINATION}, which
-     * specifies if the destination directory needs to create new directory or not.
-     */
-    public static final String EXTRA_DIRECTORY_COPY = "com.android.documentsui.DIRECTORY_COPY";
-
-    /**
      * Extra flag used to store the current stack so user opens in right spot.
      */
     public static final String EXTRA_STACK = "com.android.documentsui.STACK";
@@ -245,7 +239,9 @@ public final class Shared {
         Uri defaultUri = Uri.parse(activity.getResources().getString(R.string.default_root_uri));
 
         if (!DocumentsContract.isRootUri(activity, defaultUri)) {
-            throw new RuntimeException("Default Root URI is not a valid root URI.");
+            Log.e(TAG, "Default Root URI is not a valid root URI, falling back to Downloads.");
+            defaultUri = DocumentsContract.buildRootUri(Providers.AUTHORITY_DOWNLOADS,
+                    Providers.ROOT_ID_DOWNLOADS);
         }
 
         return defaultUri;
