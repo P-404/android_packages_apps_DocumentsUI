@@ -20,7 +20,6 @@ import static com.android.documentsui.base.Providers.AUTHORITY_STORAGE;
 import static com.android.documentsui.base.Providers.ROOT_ID_DEVICE;
 
 import android.content.BroadcastReceiver;
-import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -38,7 +37,6 @@ import androidx.test.filters.LargeTest;
 
 import com.android.documentsui.base.DocumentInfo;
 import com.android.documentsui.base.RootInfo;
-import com.android.documentsui.base.State;
 import com.android.documentsui.files.FilesActivity;
 import com.android.documentsui.filters.HugeLongTest;
 import com.android.documentsui.services.TestNotificationService;
@@ -119,10 +117,9 @@ public class FileCopyUiTest extends ActivityTest<FilesActivity> {
 
         mFoldersToCleanup.clear();
 
-        // Create ContentProviderClient and DocumentsProviderHelper for using SD Card.
-        ContentProviderClient storageClient =
-                mResolver.acquireUnstableContentProviderClient(AUTHORITY_STORAGE);
-        mStorageDocsHelper = new DocumentsProviderHelper(AUTHORITY_STORAGE, storageClient);
+        // Create DocumentsProviderHelper for using SD Card.
+        mStorageDocsHelper = new DocumentsProviderHelper(userId, AUTHORITY_STORAGE, context,
+                AUTHORITY_STORAGE);
 
         // Set a flag to prevent many refreshes.
         Bundle bundle = new Bundle();
@@ -138,13 +135,6 @@ public class FileCopyUiTest extends ActivityTest<FilesActivity> {
                 Settings.Global.DEVICE_NAME);
         // If null or empty, use default name.
         mDeviceLabel = TextUtils.isEmpty(mDeviceLabel) ? "Internal Storage" : mDeviceLabel;
-
-        // If Internal Storage is not shown, turn on.
-        State state = ((FilesActivity) getActivity()).getDisplayState();
-        if (!state.showAdvanced) {
-            bots.main.clickToolbarOverflowItem(
-                    context.getResources().getString(R.string.menu_advanced_show));
-        }
 
         try {
             bots.notifications.setNotificationAccess(getActivity(), true);
