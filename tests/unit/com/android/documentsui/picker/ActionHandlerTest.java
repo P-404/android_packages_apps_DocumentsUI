@@ -146,23 +146,10 @@ public class ActionHandlerTest {
 
     @Test
     public void testInitLocation_CopyDestination_DefaultsToDownloads() throws Exception {
-        mActivity.resources.bools.put(R.bool.show_documents_root, false);
-
         Intent intent = mActivity.getIntent();
         intent.setAction(Shared.ACTION_PICK_COPY_DESTINATION);
         mHandler.initLocation(mActivity.getIntent());
         assertRootPicked(TestProvidersAccess.DOWNLOADS.getUri());
-    }
-
-    @Test
-    public void testInitLocation_CopyDestination_DocumentsRootEnabled() throws Exception {
-        mActivity.resources.bools.put(R.bool.show_documents_root, true);
-        mActivity.resources.strings.put(R.string.default_root_uri, TestProvidersAccess.HOME.getUri().toString());
-
-        Intent intent = mActivity.getIntent();
-        intent.setAction(Shared.ACTION_PICK_COPY_DESTINATION);
-        mHandler.initLocation(intent);
-        assertRootPicked(TestProvidersAccess.HOME.getUri());
     }
 
     @Test
@@ -587,8 +574,28 @@ public class ActionHandlerTest {
         mActivity.resources.setQuickViewerPackage("corptropolis.viewer");
         mActivity.currentRoot = TestProvidersAccess.HOME;
 
-        mHandler.priviewDocument(TestEnv.FILE_GIF);
+        mHandler.onDocumentOpened(TestEnv.FILE_GIF, ActionHandler.VIEW_TYPE_PREVIEW,
+                ActionHandler.VIEW_TYPE_REGULAR, true);
         mActivity.assertActivityStarted(Intent.ACTION_QUICK_VIEW);
+    }
+
+    @Test
+    public void testPreviewItem_archives() throws Exception {
+        mActivity.resources.setQuickViewerPackage("corptropolis.viewer");
+        mActivity.currentRoot = TestProvidersAccess.HOME;
+
+        mHandler.onDocumentOpened(TestEnv.FILE_ARCHIVE, ActionHandler.VIEW_TYPE_PREVIEW,
+                ActionHandler.VIEW_TYPE_REGULAR, true);
+        mActivity.assertActivityStarted(Intent.ACTION_QUICK_VIEW);
+    }
+
+    @Test
+    public void testPreviewItem_noQuickViewer() throws Exception {
+        mActivity.currentRoot = TestProvidersAccess.HOME;
+
+        mHandler.onDocumentOpened(TestEnv.FILE_GIF, ActionHandler.VIEW_TYPE_PREVIEW,
+                ActionHandler.VIEW_TYPE_REGULAR, true);
+        mActivity.assertActivityStarted(Intent.ACTION_VIEW);
     }
 
     private void testInitLocationDefaultToRecentsOnAction(@ActionType int action)
@@ -607,7 +614,6 @@ public class ActionHandlerTest {
     private void testInitLocationDefaultToDownloadsOnAction(@ActionType int action)
             throws Exception {
         mEnv.state.action = action;
-        mActivity.resources.bools.put(R.bool.show_documents_root, false);
         mActivity.resources.strings.put(R.string.default_root_uri,
                 TestProvidersAccess.DOWNLOADS.getUri().toString());
 
