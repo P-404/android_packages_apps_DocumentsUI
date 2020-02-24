@@ -325,6 +325,18 @@ public class DocumentInfo implements Durable, Parcelable {
         return (flags & Document.FLAG_DIR_PREFERS_LAST_MODIFIED) != 0;
     }
 
+    /**
+     * Returns a document uri representing this {@link DocumentInfo}. The URI contains user
+     * information. Use this when uri is needed externally. For usage within DocsUI, use
+     * {@link #derivedUri}.
+     */
+    public Uri getDocumentUri() {
+        if (UserId.CURRENT_USER.equals(userId)) {
+            return derivedUri;
+        }
+        return userId.buildDocumentUriAsUser(authority, documentId);
+    }
+
     @Override
     public int hashCode() {
         return userId.hashCode() + derivedUri.hashCode() + mimeType.hashCode();
@@ -404,6 +416,10 @@ public class DocumentInfo implements Durable, Parcelable {
         return DocumentsContract.buildDocumentUri(
             getCursorString(cursor, RootCursorWrapper.COLUMN_AUTHORITY),
             getCursorString(cursor, Document.COLUMN_DOCUMENT_ID));
+    }
+
+    public static UserId getUserId(Cursor cursor) {
+        return UserId.of(getCursorInt(cursor, RootCursorWrapper.COLUMN_USER_ID));
     }
 
     public static void addMimeTypes(ContentResolver resolver, Uri uri, Set<String> mimeTypes) {
