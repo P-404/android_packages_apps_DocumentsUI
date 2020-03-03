@@ -20,11 +20,14 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Process;
 import android.os.UserHandle;
 import android.os.UserManager;
+import android.provider.DocumentsContract;
 
 import androidx.annotation.VisibleForTesting;
 import androidx.loader.content.CursorLoader;
@@ -88,6 +91,7 @@ public final class UserId {
         } catch (PackageManager.NameNotFoundException e) {
             throw new IllegalStateException("android package not found.");
         }
+
     }
 
     /**
@@ -105,6 +109,21 @@ public final class UserId {
     }
 
     /**
+     * Returns a drawable object associated with a particular resource ID in this user.
+     */
+    public Drawable getDrawable(Context context, int resId) {
+        return asContext(context).getDrawable(resId);
+    }
+
+    /**
+     * If this target user is a managed profile, then this returns a badged copy of the given icon
+     * to be able to distinguish it from the original icon.
+     */
+    public Drawable getUserBadgedIcon(Context context, Drawable drawable) {
+        return getPackageManager(context).getUserBadgedIcon(drawable, mUserHandle);
+    }
+
+    /**
      * Returns true if this user refers to the system user; false otherwise.
      */
     public boolean isSystem() {
@@ -116,6 +135,20 @@ public final class UserId {
      */
     public boolean isManagedProfile(UserManager userManager) {
         return userManager.isManagedProfile(mUserHandle.getIdentifier());
+    }
+
+    /**
+     * Returns a document uri representing this user.
+     */
+    public Uri buildDocumentUriAsUser(String authority, String documentId) {
+        return DocumentsContract.buildDocumentUriAsUser(authority, documentId, mUserHandle);
+    }
+
+    /**
+     * Starts activity for this user
+     */
+    public void startActivityAsUser(Context context, Intent intent) {
+        context.startActivityAsUser(intent, mUserHandle);
     }
 
     /**
