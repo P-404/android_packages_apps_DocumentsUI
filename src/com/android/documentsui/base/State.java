@@ -83,11 +83,19 @@ public class State implements android.os.Parcelable {
     public boolean localOnly;
 
     public boolean openableOnly;
+    public boolean restrictScopeStorage;
 
     /**
      * Represents whether the intent is a cross-profile intent
      */
     public boolean canShareAcrossProfile = false;
+
+    /**
+     * Returns true if we are allowed to interact with the user.
+     */
+    public boolean canInteractWith(UserId userId) {
+        return canShareAcrossProfile || UserId.CURRENT_USER.equals(userId);
+    }
 
     /**
      * This is basically a sub-type for the copy operation. It can be either COPY,
@@ -164,6 +172,7 @@ public class State implements android.os.Parcelable {
         out.writeMap(dirConfigs);
         out.writeList(excludedAuthorities);
         out.writeInt(openableOnly ? 1 : 0);
+        out.writeInt(restrictScopeStorage ? 1 : 0);
         out.writeParcelable(sortModel, 0);
     }
 
@@ -178,6 +187,7 @@ public class State implements android.os.Parcelable {
                 + ", dirConfigs=" + dirConfigs
                 + ", excludedAuthorities=" + excludedAuthorities
                 + ", openableOnly=" + openableOnly
+                + ", restrictScopeStorage=" + restrictScopeStorage
                 + ", sortModel=" + sortModel
                 + "}";
     }
@@ -199,6 +209,7 @@ public class State implements android.os.Parcelable {
             in.readMap(state.dirConfigs, loader);
             in.readList(state.excludedAuthorities, loader);
             state.openableOnly = in.readInt() != 0;
+            state.restrictScopeStorage = in.readInt() != 0;
             state.sortModel = in.readParcelable(loader);
             return state;
         }

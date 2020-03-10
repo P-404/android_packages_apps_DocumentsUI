@@ -130,7 +130,8 @@ abstract class Message {
                 update(null, mEnv.getModel().info, null,
                         mEnv.getContext().getDrawable(R.drawable.ic_dialog_info));
             } else if (mEnv.getDisplayState().action == State.ACTION_OPEN_TREE
-                    && mEnv.getDisplayState().stack.peek().isBlockedFromTree()) {
+                    && mEnv.getDisplayState().stack.peek().isBlockedFromTree()
+                    && mEnv.getDisplayState().restrictScopeStorage) {
                 updateBlockFromTreeMessage();
             }
         }
@@ -177,8 +178,11 @@ abstract class Message {
         @Override
         void update(Update event) {
             reset();
-            if (event.hasException() && !event.hasAuthenticationException()) {
-                updateToInflatedErrorMesage();
+            if (event.hasCrossProfileException()) {
+                // TODO: update error message.
+                updateToInflatedErrorMessage();
+            } else if (event.hasException() && !event.hasAuthenticationException()) {
+                updateToInflatedErrorMessage();
             } else if (event.hasAuthenticationException()) {
                 updateToCantDisplayContentMessage();
             } else if (mEnv.getModel().getModelIds().length == 0) {
@@ -186,7 +190,7 @@ abstract class Message {
             }
         }
 
-        private void updateToInflatedErrorMesage() {
+        private void updateToInflatedErrorMessage() {
             update(null, mEnv.getContext().getResources().getText(R.string.query_error), null,
                     mEnv.getContext().getDrawable(R.drawable.hourglass));
         }
