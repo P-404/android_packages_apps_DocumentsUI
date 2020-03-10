@@ -32,7 +32,7 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Looper;
-import android.os.UserHandle;
+import android.os.Process;
 import android.provider.DocumentsContract;
 import android.provider.Settings;
 import android.text.TextUtils;
@@ -47,6 +47,7 @@ import androidx.appcompat.app.AlertDialog;
 
 import com.android.documentsui.R;
 import com.android.documentsui.ui.MessageBuilder;
+import com.android.documentsui.util.VersionUtils;
 
 import java.text.Collator;
 import java.time.Instant;
@@ -170,14 +171,16 @@ public final class Shared {
      * Whether the calling app should be restricted in Storage Access Framework or not.
      */
     public static boolean shouldRestrictStorageAccessFramework(Activity activity) {
+        if (!VersionUtils.isAtLeastR()) {
+            return false;
+        }
+
         final String packageName = getCallingPackageName(activity);
-        final int uid = UserId.CURRENT_USER.getIdentifier();
         final boolean ret = CompatChanges.isChangeEnabled(RESTRICT_STORAGE_ACCESS_FRAMEWORK,
-                packageName, UserHandle.getUserHandleForUid(uid));
+                packageName, Process.myUserHandle());
 
         Log.d(TAG,
-                "shouldRestrictStorageAccessFramework = " + ret + ", packageName = " + packageName
-                        + " with user = " + uid);
+                "shouldRestrictStorageAccessFramework = " + ret + ", packageName = " + packageName);
 
         return ret;
     }
