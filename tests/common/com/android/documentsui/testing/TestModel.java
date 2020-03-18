@@ -20,6 +20,7 @@ import android.database.MatrixCursor;
 import android.os.Bundle;
 import android.provider.DocumentsContract;
 import android.provider.DocumentsContract.Document;
+import android.webkit.MimeTypeMap;
 
 import com.android.documentsui.DirectoryResult;
 import com.android.documentsui.Model;
@@ -28,14 +29,13 @@ import com.android.documentsui.base.Features;
 import com.android.documentsui.base.UserId;
 import com.android.documentsui.roots.RootCursorWrapper;
 
-import libcore.content.type.MimeMap;
-
 import java.util.Random;
 
 public class TestModel extends Model {
 
     static final String[] COLUMNS = new String[]{
         RootCursorWrapper.COLUMN_AUTHORITY,
+        RootCursorWrapper.COLUMN_USER_ID,
         Document.COLUMN_DOCUMENT_ID,
         Document.COLUMN_FLAGS,
         Document.COLUMN_DISPLAY_NAME,
@@ -103,9 +103,10 @@ public class TestModel extends Model {
                 flags);
     }
 
-    public DocumentInfo createDocument(String name, String mimeType, int flags) {
+    public DocumentInfo createDocumentForUser(String name, String mimeType, int flags,
+            UserId userId) {
         DocumentInfo doc = new DocumentInfo();
-        doc.userId = mUserId;
+        doc.userId = userId;
         doc.authority = mAuthority;
         doc.documentId = Integer.toString(++mLastId);
         doc.derivedUri = DocumentsContract.buildDocumentUri(doc.authority, doc.documentId);
@@ -119,10 +120,15 @@ public class TestModel extends Model {
         return doc;
     }
 
+    public DocumentInfo createDocument(String name, String mimeType, int flags) {
+        return createDocumentForUser(name, mimeType, flags, mUserId);
+    }
+
     private void addToCursor(DocumentInfo doc) {
         MatrixCursor.RowBuilder row = mCursor.newRow();
         row.add(Document.COLUMN_DOCUMENT_ID, doc.documentId);
         row.add(RootCursorWrapper.COLUMN_AUTHORITY, doc.authority);
+        row.add(RootCursorWrapper.COLUMN_USER_ID, doc.userId);
         row.add(Document.COLUMN_DISPLAY_NAME, doc.displayName);
         row.add(Document.COLUMN_MIME_TYPE, doc.mimeType);
         row.add(Document.COLUMN_FLAGS, doc.flags);
@@ -134,7 +140,7 @@ public class TestModel extends Model {
 
         while(i != -1) {
             name = name.substring(i + 1);
-            String type = MimeMap.getDefault().guessMimeTypeFromExtension(name);
+            String type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(name);
             if (type != null) {
                 return type;
             }
