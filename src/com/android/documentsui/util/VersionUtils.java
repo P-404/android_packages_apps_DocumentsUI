@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,12 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.documentsui.prefs;
 
-public final class Preferences {
-    private Preferences() {}
+package com.android.documentsui.util;
 
-    public static boolean shouldBackup(String s) {
-        return LocalPreferences.shouldBackup(s) || ScopedPreferences.shouldBackup(s);
+import android.os.Build;
+
+/**
+ * A utility class for checking Android version.
+ */
+public class VersionUtils {
+
+    private VersionUtils() {
+    }
+
+    /**
+     * Returns whether the device is running on the Android R or newer.
+     */
+    public static boolean isAtLeastR() {
+        return Build.VERSION.CODENAME.equals("R")
+                || (Build.VERSION.CODENAME.equals("REL") && Build.VERSION.SDK_INT >= 30);
     }
 }

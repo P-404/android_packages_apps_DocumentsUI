@@ -19,12 +19,14 @@ package com.android.documentsui;
 import static com.google.common.truth.Truth.assertThat;
 
 import android.content.Context;
+import android.net.Uri;
 import android.os.UserHandle;
 import android.view.LayoutInflater;
 import android.view.View;
 
 import androidx.test.InstrumentationRegistry;
 
+import com.android.documentsui.base.DocumentInfo;
 import com.android.documentsui.base.RootInfo;
 import com.android.documentsui.base.State;
 import com.android.documentsui.base.UserId;
@@ -37,7 +39,6 @@ import com.google.android.material.tabs.TabLayout;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -53,6 +54,8 @@ public class ProfileTabsTest {
     private TestEnvironment mTestEnv;
     private State mState;
     private TestUserIdManager mTestUserIdManager;
+    private TestCommonAddons mTestCommonAddons;
+    private boolean mIsListenerInvoked;
 
     @Before
     public void setUp() {
@@ -69,9 +72,11 @@ public class ProfileTabsTest {
 
         mTabLayout = view.findViewById(R.id.tabs);
         mTestEnv = new TestEnvironment();
-        mTestEnv.isSearching = false;
+        mTestEnv.isTextSearching = false;
 
         mTestUserIdManager = new TestUserIdManager();
+        mTestCommonAddons = new TestCommonAddons();
+        mTestCommonAddons.mCurrentRoot = TestProvidersAccess.DOWNLOADS;
     }
 
     @Test
@@ -147,7 +152,7 @@ public class ProfileTabsTest {
 
     @Test
     public void testUpdateView_twoUsers_isSearching_shouldHide() {
-        mTestEnv.isSearching = true;
+        mTestEnv.isTextSearching = true;
         initializeWithUsers(systemUser, managedUser);
 
         assertThat(mTabLayout.getVisibility()).isEqualTo(View.GONE);
@@ -169,6 +174,23 @@ public class ProfileTabsTest {
     }
 
     @Test
+    public void testUpdateView_afterCurrentRootChanged_shouldChangeSelectedUser() {
+        initializeWithUsers(systemUser, managedUser);
+        mProfileTabs.updateView();
+
+        assertThat(mProfileTabs.getSelectedUser()).isEqualTo(systemUser);
+
+        RootInfo newRoot = RootInfo.copyRootInfo(mTestCommonAddons.mCurrentRoot);
+        newRoot.userId = managedUser;
+        mTestCommonAddons.mCurrentRoot = newRoot;
+        mProfileTabs.updateView();
+
+        assertThat(mProfileTabs.getSelectedUser()).isEqualTo(managedUser);
+        // updating view should not trigger listener callback.
+        assertThat(mIsListenerInvoked).isFalse();
+    }
+
+    @Test
     public void testgetSelectedUser_twoUsers() {
         initializeWithUsers(systemUser, managedUser);
 
@@ -177,6 +199,19 @@ public class ProfileTabsTest {
 
         mTabLayout.selectTab(mTabLayout.getTabAt(1));
         assertThat(mProfileTabs.getSelectedUser()).isEqualTo(managedUser);
+        assertThat(mIsListenerInvoked).isTrue();
+    }
+
+    @Test
+    public void testReselectedUser_doesNotInvokeListener() {
+        initializeWithUsers(systemUser, managedUser);
+
+        assertThat(mTabLayout.getSelectedTabPosition()).isAtLeast(0);
+        assertThat(mProfileTabs.getSelectedUser()).isEqualTo(systemUser);
+
+        mTabLayout.selectTab(mTabLayout.getTabAt(0));
+        assertThat(mProfileTabs.getSelectedUser()).isEqualTo(systemUser);
+        assertThat(mIsListenerInvoked).isFalse();
     }
 
     @Test
@@ -196,8 +231,10 @@ public class ProfileTabsTest {
             }
         }
 
-        mProfileTabs = new ProfileTabs(mTabLayout, mState, mTestUserIdManager, mTestEnv);
+        mProfileTabs = new ProfileTabs(mTabLayout, mState, mTestUserIdManager, mTestEnv,
+                mTestCommonAddons);
         mProfileTabs.updateView();
+        mProfileTabs.setListener(userId -> mIsListenerInvoked = true);
     }
 
     /**
@@ -205,7 +242,7 @@ public class ProfileTabsTest {
      */
     private static class TestEnvironment implements NavigationViewManager.Environment {
 
-        public boolean isSearching = false;
+        public boolean isTextSearching = false;
 
         @Override
         public RootInfo getCurrentRoot() {
@@ -228,30 +265,74 @@ public class ProfileTabsTest {
         }
 
         @Override
-        public boolean isSearching() {
-            return isSearching;
+        public boolean isTextSearching() {
+            return isTextSearching;
         }
 
     }
 
-    private static class TestUserIdManager implements UserIdManager {
-        List<UserId> userIds = new ArrayList<>();
-        UserId systemUser = null;
-        UserId managedUser = null;
+    private static class TestCommonAddons implements AbstractActionHandler.CommonAddons {
+
+        private RootInfo mCurrentRoot;
 
         @Override
-        public List<UserId> getUserIds() {
-            return userIds;
+        public void restoreRootAndDirectory() {
+            throw new UnsupportedOperationException("not implemented");
         }
 
         @Override
-        public UserId getSystemUser() {
-            return systemUser;
+        public void refreshCurrentRootAndDirectory(int anim) {
+            throw new UnsupportedOperationException("not implemented");
         }
 
         @Override
-        public UserId getManagedUser() {
-            return managedUser;
+        public void onRootPicked(RootInfo root) {
+            throw new UnsupportedOperationException("not implemented");
+        }
+
+        @Override
+        public void onDocumentsPicked(List<DocumentInfo> docs) {
+            throw new UnsupportedOperationException("not implemented");
+        }
+
+        @Override
+        public void onDocumentPicked(DocumentInfo doc) {
+            throw new UnsupportedOperationException("not implemented");
+        }
+
+        @Override
+        public RootInfo getCurrentRoot() {
+            return mCurrentRoot;
+        }
+
+        @Override
+        public DocumentInfo getCurrentDirectory() {
+            throw new UnsupportedOperationException("not implemented");
+        }
+
+        @Override
+        public UserId getSelectedUser() {
+            throw new UnsupportedOperationException("not implemented");
+        }
+
+        @Override
+        public boolean isInRecents() {
+            throw new UnsupportedOperationException("not implemented");
+        }
+
+        @Override
+        public void setRootsDrawerOpen(boolean open) {
+            throw new UnsupportedOperationException("not implemented");
+        }
+
+        @Override
+        public void updateNavigator() {
+            throw new UnsupportedOperationException("not implemented");
+        }
+
+        @Override
+        public void notifyDirectoryNavigated(Uri docUri) {
+            throw new UnsupportedOperationException("not implemented");
         }
     }
 }

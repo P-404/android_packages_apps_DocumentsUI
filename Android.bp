@@ -28,6 +28,10 @@ java_defaults {
         "guava",
     ],
 
+    libs: [
+        "app-compat-annotations",
+    ],
+
     privileged: true,
 
     certificate: "platform",
@@ -37,8 +41,18 @@ java_defaults {
     },
 
     sdk_version: "system_current",
+    target_sdk_version: "29",
+    min_sdk_version: "29",
 
-    plugins: ["java_api_finder"],
+    plugins: [
+        "compat-changeid-annotation-processor",
+        "java_api_finder",
+    ],
+}
+
+platform_compat_config {
+    name: "documents-ui-compat-config",
+    src: ":DocumentsUI",
 }
 
 filegroup {
@@ -82,6 +96,8 @@ android_library {
     ],
 
     sdk_version: "system_current",
+    target_sdk_version: "29",
+    min_sdk_version: "29",
 }
 
 android_app {
@@ -100,4 +116,7 @@ android_app {
     ],
 
     required: ["privapp_whitelist_com.android.documentsui"],
+
+    target_sdk_version: "29",
+    min_sdk_version: "29",
 }

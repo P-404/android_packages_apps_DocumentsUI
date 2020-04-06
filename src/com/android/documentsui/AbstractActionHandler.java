@@ -89,6 +89,7 @@ public abstract class AbstractActionHandler<T extends FragmentActivity & CommonA
     @VisibleForTesting
     public static final int CODE_FORWARD = 42;
     public static final int CODE_AUTHENTICATION = 43;
+    public static final int CODE_FORWARD_CROSS_PROFILE = 44;
 
     @VisibleForTesting
     static final int LOADER_ID = 42;
@@ -259,7 +260,7 @@ public abstract class AbstractActionHandler<T extends FragmentActivity & CommonA
     }
 
     @Override
-    public void openRoot(ResolveInfo app) {
+    public void openRoot(ResolveInfo app, UserId userId) {
         throw new UnsupportedOperationException("Can't open an app.");
     }
 
@@ -470,7 +471,7 @@ public abstract class AbstractActionHandler<T extends FragmentActivity & CommonA
         }
 
         Intent intent = new QuickViewIntentBuilder(
-                mActivity.getPackageManager(),
+                mActivity,
                 mActivity.getResources(),
                 doc,
                 mModel,
@@ -574,6 +575,7 @@ public abstract class AbstractActionHandler<T extends FragmentActivity & CommonA
             mState.stack.push(doc);
         } else {
             if (!Objects.equals(mState.stack.getRoot(), stack.getRoot())) {
+                // It is now possible when opening cross-profile folder.
                 Log.w(TAG, "Provider returns " + stack.getRoot() + " rather than expected "
                         + mState.stack.getRoot());
             }
@@ -756,16 +758,11 @@ public abstract class AbstractActionHandler<T extends FragmentActivity & CommonA
 
     @Override
     public void loadDocumentsForCurrentStack() {
-        DocumentStack stack = mState.stack;
-        if (!stack.isRecents() && stack.isEmpty()) {
-            DirectoryResult result = new DirectoryResult();
-
-            // TODO (b/35996595): Consider plumbing through the actual exception, though it might
-            // not be very useful (always pointing to DatabaseUtils#readExceptionFromParcel()).
-            result.exception = new IllegalStateException("Failed to load root document.");
-            mInjector.getModel().update(result);
-            return;
-        }
+        // mState.stack may be empty when we cannot load the root document.
+        // However, we still want to restart loader because we may need to perform search in a
+        // cross-profile scenario.
+        // For RecentsLoader and GlobalSearchLoader, they do not require rootDoc so it is no-op.
+        // For DirectoryLoader, the loader needs to handle the case when stack.peek() returns null.
 
         mActivity.getSupportLoaderManager().restartLoader(LOADER_ID, null, mBindings);
     }
@@ -825,9 +822,8 @@ public abstract class AbstractActionHandler<T extends FragmentActivity & CommonA
     }
 
     protected final void loadDeviceRoot() {
-        mActivity.onRootPicked(
-                mProviders.getRootOneshot(UserId.DEFAULT_USER, Providers.AUTHORITY_STORAGE,
-                        Providers.ROOT_ID_DEVICE));
+        loadRoot(DocumentsContract.buildRootUri(Providers.AUTHORITY_STORAGE,
+                Providers.ROOT_ID_DEVICE), UserId.DEFAULT_USER);
     }
 
     protected final void loadHomeDir() {
@@ -873,7 +869,8 @@ public abstract class AbstractActionHandler<T extends FragmentActivity & CommonA
                             mState,
                             mExecutors,
                             mInjector.fileTypeLookup,
-                            mSearchMgr.buildQueryArgs());
+                            mSearchMgr.buildQueryArgs(),
+                            mState.stack.getRoot().userId);
                 } else {
                     if (DEBUG) {
                         Log.d(TAG, "Creating new loader recents.");
@@ -889,14 +886,24 @@ public abstract class AbstractActionHandler<T extends FragmentActivity & CommonA
                 loader.setObserver(observer);
                 return loader;
             } else {
+                // There maybe no root docInfo
+                DocumentInfo rootDoc = mState.stack.peek();
+
+                String authority = rootDoc == null
+                        ? mState.stack.getRoot().authority
+                        : rootDoc.authority;
+                String documentId = rootDoc == null
+                        ? mState.stack.getRoot().documentId
+                        : rootDoc.documentId;
+
                 Uri contentsUri = mSearchMgr.isSearching()
                         ? DocumentsContract.buildSearchDocumentsUri(
-                            mState.stack.getRoot().authority,
-                            mState.stack.getRoot().rootId,
-                            mSearchMgr.getCurrentSearch())
+                        mState.stack.getRoot().authority,
+                        mState.stack.getRoot().rootId,
+                        mSearchMgr.getCurrentSearch())
                         : DocumentsContract.buildChildDocumentsUri(
-                                mState.stack.peek().authority,
-                                mState.stack.peek().documentId);
+                                authority,
+                                documentId);
 
                 final Bundle queryArgs = mSearchMgr.isSearching()
                         ? mSearchMgr.buildQueryArgs()

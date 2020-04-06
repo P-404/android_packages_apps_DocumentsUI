@@ -63,7 +63,6 @@ import com.android.documentsui.dirlist.AnimationView;
 import com.android.documentsui.dirlist.AppsRowManager;
 import com.android.documentsui.dirlist.DirectoryFragment;
 import com.android.documentsui.prefs.LocalPreferences;
-import com.android.documentsui.prefs.Preferences;
 import com.android.documentsui.prefs.PreferencesMonitor;
 import com.android.documentsui.queries.CommandInterceptor;
 import com.android.documentsui.queries.SearchChipData;
@@ -91,6 +90,7 @@ public abstract class BaseActivity
 
     protected SearchViewManager mSearchManager;
     protected AppsRowManager mAppsRowManager;
+    protected UserIdManager mUserIdManager;
     protected State mState;
 
     @Injected
@@ -155,7 +155,7 @@ public abstract class BaseActivity
         Metrics.logActivityLaunch(mState, intent);
 
         mProviders = DocumentsApplication.getProvidersCache(this);
-        mDocs = DocumentsAccess.create(this);
+        mDocs = DocumentsAccess.create(this, mState);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -200,6 +200,9 @@ public abstract class BaseActivity
             @Override
             public void onSearchViewChanged(boolean opened) {
                 mNavigator.update();
+                // We also need to update AppsRowManager because we may want to show/hide the
+                // appsRow in cross-profile search according to the searching conditions.
+                mAppsRowManager.updateView(BaseActivity.this);
             }
 
             @Override
@@ -249,8 +252,9 @@ public abstract class BaseActivity
                         cmdInterceptor);
 
         ViewGroup chipGroup = findViewById(R.id.search_chip_group);
+        mUserIdManager = DocumentsApplication.getUserIdManager(this);
         mSearchManager = new SearchViewManager(searchListener, queryInterceptor,
-                chipGroup, icicle, mInjector.prefs::isRecordSearch);
+                chipGroup, icicle);
         // initialize the chip sets by accept mime types
         mSearchManager.initChipSets(mState.acceptMimes);
         // update the chip items by the mime types of the root
@@ -268,13 +272,38 @@ public abstract class BaseActivity
         });
 
         mNavigator.setProfileTabsListener(userId -> {
-            // Reload the roots with the selected user is changed.
+            // There are several possible cases that may trigger this callback.
+            // 1. A user click on tab layout.
+            // 2. A user click on tab layout, when filter is checked. (searching = true)
+            // 3. A user click on a open a dir of a different user in search (stack size > 1)
+            // 4. After tab layout is initialized.
+
+            if (!mState.stack.isInitialized()) {
+                return;
+            }
+
+            // Reload the roots when the selected user is changed.
+            // After reloading, we have visually same roots in the drawer. But they are
+            // different by holding different userId. Next time when user select a root, it can
+            // bring the user to correct root doc.
             final RootsFragment roots = RootsFragment.get(getSupportFragmentManager());
             if (roots != null) {
                 roots.onSelectedUserChanged();
             }
 
-            mInjector.actions.loadCrossProfileRoot(getCurrentRoot(), userId);
+            if (mState.stack.size() <= 1) {
+                // We do not load cross-profile root if the stack contains two documents. The
+                // stack may contain >1 docs when the user select a folder of the other user in
+                // search. In that case, we don't want to reload the root. The whole stack
+                // and the root will be updated in openFolderInSearchResult.
+
+                // When a user filters files by search chips on the root doc, we will be in
+                // searching mode and with stack size 1 (0 if rootDoc cannot be loaded).
+                // The activity will clear search on root picked. If we don't clear the search,
+                // user may see the search result screen show up briefly and then get cleared.
+                mSearchManager.cancelSearch();
+                mInjector.actions.loadCrossProfileRoot(getCurrentRoot(), userId);
+            }
         });
 
         mSortController = SortController.create(this, mState.derivedMode, mState.sortModel);
@@ -293,7 +322,7 @@ public abstract class BaseActivity
         // For now, we only work with prefs that we backup. This
         // just limits the scope of what we expect to come flowing
         // through here until we know we want more and fancier options.
-        assert(Preferences.shouldBackup(pref));
+        assert (LocalPreferences.shouldBackup(pref));
     }
 
     @Override
@@ -365,6 +394,7 @@ public abstract class BaseActivity
         state.sortModel = SortModel.createModel();
         state.localOnly = intent.getBooleanExtra(Intent.EXTRA_LOCAL_ONLY, false);
         state.excludedAuthorities = getExcludedAuthorities();
+        state.restrictScopeStorage = Shared.shouldRestrictStorageAccessFramework(this);
 
         includeState(state);
 
@@ -756,8 +786,8 @@ public abstract class BaseActivity
     }
 
     @Override
-    public boolean isSearching() {
-        return mSearchManager.isSearching();
+    public boolean isTextSearching() {
+        return mSearchManager.isTextSearching();
     }
 
     @Override

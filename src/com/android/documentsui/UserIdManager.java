@@ -26,7 +26,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.UserHandle;
 import android.os.UserManager;
 import android.util.Log;
@@ -34,10 +33,10 @@ import android.util.Log;
 import androidx.annotation.GuardedBy;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
-import androidx.core.os.BuildCompat;
 
 import com.android.documentsui.base.Features;
 import com.android.documentsui.base.UserId;
+import com.android.documentsui.util.VersionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -115,8 +114,8 @@ public interface UserIdManager {
 
 
             IntentFilter filter = new IntentFilter();
-            filter.addAction(Intent.ACTION_USER_ADDED);
-            filter.addAction(Intent.ACTION_USER_REMOVED);
+            filter.addAction(Intent.ACTION_MANAGED_PROFILE_ADDED);
+            filter.addAction(Intent.ACTION_MANAGED_PROFILE_REMOVED);
             mContext.registerReceiver(mIntentReceiver, filter);
         }
 
@@ -214,8 +213,7 @@ public interface UserIdManager {
         private static boolean isDeviceSupported(Context context) {
             // The feature requires Android R DocumentsContract APIs and INTERACT_ACROSS_USERS
             // permission.
-            return (BuildCompat.isAtLeastR()
-                    || (Build.VERSION.CODENAME.equals("REL") && Build.VERSION.SDK_INT >= 30))
+            return VersionUtils.isAtLeastR()
                     && context.checkSelfPermission(Manifest.permission.INTERACT_ACROSS_USERS)
                     == PackageManager.PERMISSION_GRANTED;
         }

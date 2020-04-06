@@ -75,6 +75,7 @@ import com.android.documentsui.base.UserId;
 import com.android.documentsui.roots.ProvidersAccess;
 import com.android.documentsui.roots.ProvidersCache;
 import com.android.documentsui.roots.RootsLoader;
+import com.android.documentsui.util.CrossProfileUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -92,8 +93,6 @@ public class RootsFragment extends Fragment {
 
     private static final String TAG = "RootsFragment";
     private static final String EXTRA_INCLUDE_APPS = "includeApps";
-    public static final String PROFILE_TARGET_ACTIVITY =
-            "com.android.internal.app.IntentForwarderActivity";
     private static final int CONTEXT_MENU_ITEM_TIMEOUT = 500;
 
     private final OnItemClickListener mItemListener = new OnItemClickListener() {
@@ -309,7 +308,9 @@ public class RootsFragment extends Fragment {
         for (final RootInfo root : roots) {
             final RootItem item;
 
-            if (root.isLibrary() || root.isDownloads()) {
+            if (root.isExternalStorageHome()) {
+                continue;
+            } else if (root.isLibrary() || root.isDownloads()) {
                 item = new RootItem(root, mActionHandler, maybeShowBadge);
                 librariesBuilder.add(item);
             } else if (root.isStorage()) {
@@ -399,9 +400,8 @@ public class RootsFragment extends Fragment {
                     appsMapping.put(userPackage, info);
 
                     // for change personal profile root.
-                    if (PROFILE_TARGET_ACTIVITY.equals(info.activityInfo.targetActivity)) {
+                    if (CrossProfileUtils.isCrossProfileIntentForwarderActivity(info)) {
                         if (UserId.CURRENT_USER.equals(userId)) {
-                            getBaseActivity().getDisplayState().canShareAcrossProfile = true;
                             profileItem = new ProfileItem(info, info.loadLabel(pm).toString(),
                                     mActionHandler);
                         }
@@ -412,6 +412,14 @@ public class RootsFragment extends Fragment {
                         if (VERBOSE) Log.v(TAG, "Adding handler app: " + item);
                     }
                 }
+            }
+        }
+
+        boolean canShareAcrossProfile = profileItem != null;
+        if (getBaseActivity().getDisplayState().canShareAcrossProfile != canShareAcrossProfile) {
+            getBaseActivity().getDisplayState().canShareAcrossProfile = canShareAcrossProfile;
+            if (!UserId.CURRENT_USER.equals(getBaseActivity().getSelectedUser())) {
+                mActionHandler.loadDocumentsForCurrentStack();
             }
         }
 
@@ -447,7 +455,7 @@ public class RootsFragment extends Fragment {
             }
         }
 
-        if (profileItem != null && Features.CROSS_PROFILE_TABS) {
+        if (canShareAcrossProfile && Features.CROSS_PROFILE_TABS) {
             // Combine lists only if we enabled profile tab feature.
             rootList.addAll(rootListOtherUser);
         }
@@ -465,7 +473,7 @@ public class RootsFragment extends Fragment {
 
         mApplicationItemList = rootList;
 
-        if (profileItem != null && !Features.CROSS_PROFILE_TABS) {
+        if (canShareAcrossProfile && !Features.CROSS_PROFILE_TABS) {
             // Add profile item if we don't support cross-profile tab.
             result.add(new SpacerItem());
             result.add(profileItem);
