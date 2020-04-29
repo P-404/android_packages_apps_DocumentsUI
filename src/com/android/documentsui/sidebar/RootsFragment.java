@@ -24,6 +24,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -93,6 +94,7 @@ public class RootsFragment extends Fragment {
 
     private static final String TAG = "RootsFragment";
     private static final String EXTRA_INCLUDE_APPS = "includeApps";
+    private static final String EXTRA_INCLUDE_APPS_INTENT = "includeAppsIntent";
     private static final int CONTEXT_MENU_ITEM_TIMEOUT = 500;
 
     private final OnItemClickListener mItemListener = new OnItemClickListener() {
@@ -126,9 +128,18 @@ public class RootsFragment extends Fragment {
 
     private List<Item> mApplicationItemList;
 
-    public static RootsFragment show(FragmentManager fm, Intent includeApps) {
+    /**
+     * Shows the {@link RootsFragment}.
+     * @param fm the FragmentManager for interacting with fragments associated with this
+     *           fragment's activity
+     * @param includeApps if {@code true}, query the intent from the system and include apps in
+     *                    the {@RootsFragment}.
+     * @param intent the intent to query for package manager
+     */
+    public static RootsFragment show(FragmentManager fm, boolean includeApps, Intent intent) {
         final Bundle args = new Bundle();
-        args.putParcelable(EXTRA_INCLUDE_APPS, includeApps);
+        args.putBoolean(EXTRA_INCLUDE_APPS, includeApps);
+        args.putParcelable(EXTRA_INCLUDE_APPS_INTENT, intent);
 
         final RootsFragment fragment = new RootsFragment();
         fragment.setArguments(args);
@@ -240,7 +251,9 @@ public class RootsFragment extends Fragment {
                     return;
                 }
 
-                Intent handlerAppIntent = getArguments().getParcelable(EXTRA_INCLUDE_APPS);
+                boolean shouldIncludeHandlerApp = getArguments().getBoolean(EXTRA_INCLUDE_APPS,
+                        /* defaultValue= */ false);
+                Intent handlerAppIntent = getArguments().getParcelable(EXTRA_INCLUDE_APPS_INTENT);
 
                 final Intent intent = activity.getIntent();
                 final boolean excludeSelf =
@@ -248,11 +261,40 @@ public class RootsFragment extends Fragment {
                 final String excludePackage = excludeSelf ? activity.getCallingPackage() : null;
                 final boolean maybeShowBadge =
                         getBaseActivity().getDisplayState().supportsCrossProfile();
-                List<Item> sortedItems = sortLoadResult(roots, excludePackage, handlerAppIntent,
+
+                // For action which supports cross profile, update the policy value in state if
+                // necessary.
+                ResolveInfo crossProfileResolveInfo = null;
+                if (state.supportsCrossProfile() && handlerAppIntent != null) {
+                    crossProfileResolveInfo = CrossProfileUtils.getCrossProfileResolveInfo(
+                            getContext().getPackageManager(), handlerAppIntent);
+                    updateCrossProfileStateAndMaybeRefresh(
+                            /* canShareAcrossProfile= */ crossProfileResolveInfo != null);
+                }
+
+                List<Item> sortedItems = sortLoadResult(
+                        getResources(),
+                        state,
+                        roots,
+                        excludePackage,
+                        shouldIncludeHandlerApp ? handlerAppIntent : null,
                         DocumentsApplication.getProvidersCache(getContext()),
                         getBaseActivity().getSelectedUser(),
                         DocumentsApplication.getUserIdManager(getContext()).getUserIds(),
                         maybeShowBadge);
+
+                // This will be removed when feature flag is removed.
+                if (crossProfileResolveInfo != null && !Features.CROSS_PROFILE_TABS) {
+                    // Add profile item if we don't support cross-profile tab.
+                    sortedItems.add(new SpacerItem());
+                    sortedItems.add(new ProfileItem(crossProfileResolveInfo,
+                            crossProfileResolveInfo.loadLabel(
+                                    getContext().getPackageManager()).toString(),
+                            mActionHandler));
+                }
+
+                // Disable drawer if only one root
+                activity.setRootsDrawerLocked(sortedItems.size() <= 1);
 
                 // Get the first visible position and offset
                 final int firstPosition = mList.getFirstVisiblePosition();
@@ -283,6 +325,20 @@ public class RootsFragment extends Fragment {
     }
 
     /**
+     * Updates the state values of whether we can share across profiles, if necessary. Also reload
+     * documents stack if the selected user is not the current user.
+     */
+    private void updateCrossProfileStateAndMaybeRefresh(boolean canShareAcrossProfile) {
+        final State state = getBaseActivity().getDisplayState();
+        if (state.canShareAcrossProfile != canShareAcrossProfile) {
+            state.canShareAcrossProfile = canShareAcrossProfile;
+            if (!UserId.CURRENT_USER.equals(getBaseActivity().getSelectedUser())) {
+                mActionHandler.loadDocumentsForCurrentStack();
+            }
+        }
+    }
+
+    /**
      * If the package name of other providers or apps capable of handling the original intent
      * include the preferred root source, it will have higher order than others.
      * @param excludePackage Exclude activities from this given package
@@ -291,6 +347,8 @@ public class RootsFragment extends Fragment {
      */
     @VisibleForTesting
     List<Item> sortLoadResult(
+            Resources resources,
+            State state,
             Collection<RootInfo> roots,
             @Nullable String excludePackage,
             @Nullable Intent handlerAppIntent,
@@ -341,42 +399,53 @@ public class RootsFragment extends Fragment {
         if (VERBOSE) Log.v(TAG, "Adding storage roots: " + storageProviders);
         result.addAll(storageProviders);
 
-        // Include apps that can handle this intent too.
+        final List<Item> rootList = new ArrayList<>();
+        final List<Item> rootListOtherUser = new ArrayList<>();
+        mApplicationItemList = new ArrayList<>();
         if (handlerAppIntent != null) {
-            includeHandlerApps(handlerAppIntent, excludePackage, result, otherProviders, userIds,
-                    maybeShowBadge);
+            includeHandlerApps(state, handlerAppIntent, excludePackage, rootList, rootListOtherUser,
+                    otherProviders, userIds, maybeShowBadge);
         } else {
             // Only add providers
             Collections.sort(otherProviders, comp);
-            if (!result.isEmpty() && !otherProviders.isEmpty()) {
-                result.add(new SpacerItem());
-            }
-            if (VERBOSE) Log.v(TAG, "Adding plain roots: " + otherProviders);
-            result.addAll(otherProviders);
-
-            mApplicationItemList = new ArrayList<>();
-            for (Item item : otherProviders) {
+            for (RootItem item : otherProviders) {
+                if (UserId.CURRENT_USER.equals(item.userId)) {
+                    rootList.add(item);
+                } else {
+                    rootListOtherUser.add(item);
+                }
                 mApplicationItemList.add(item);
             }
         }
+
+        List<Item> presentableList = new UserItemsCombiner(resources, state)
+                .setRootListForCurrentUser(rootList)
+                .setRootListForOtherUser(rootListOtherUser)
+                .createPresentableList();
+        addListToResult(result, presentableList);
         return result;
+    }
+
+    private void addListToResult(List<Item> result, List<Item> rootList) {
+        if (!result.isEmpty() && !rootList.isEmpty()) {
+            result.add(new SpacerItem());
+        }
+        result.addAll(rootList);
     }
 
     /**
      * Adds apps capable of handling the original intent will be included in list of roots. If
      * the providers and apps are the same package name, combine them as RootAndAppItems.
      */
-    private void includeHandlerApps(
-            Intent handlerAppIntent, @Nullable String excludePackage, List<Item> result,
-            List<RootItem> otherProviders, List<UserId> userIds, boolean maybeShowBadge) {
+    private void includeHandlerApps(State state,
+            Intent handlerAppIntent, @Nullable String excludePackage, List<Item> rootList,
+            List<Item> rootListOtherUser, List<RootItem> otherProviders, List<UserId> userIds,
+            boolean maybeShowBadge) {
         if (VERBOSE) Log.v(TAG, "Adding handler apps for intent: " + handlerAppIntent);
 
         Context context = getContext();
-        final List<Item> rootList = new ArrayList<>();
-        final List<Item> rootListOtherUser = new ArrayList<>();
         final Map<UserPackage, ResolveInfo> appsMapping = new HashMap<>();
         final Map<UserPackage, Item> appItems = new HashMap<>();
-        ProfileItem profileItem = null;
 
         final String myPackageName = context.getPackageName();
         for (UserId userId : userIds) {
@@ -399,27 +468,13 @@ public class RootsFragment extends Fragment {
                     UserPackage userPackage = new UserPackage(userId, packageName);
                     appsMapping.put(userPackage, info);
 
-                    // for change personal profile root.
-                    if (CrossProfileUtils.isCrossProfileIntentForwarderActivity(info)) {
-                        if (UserId.CURRENT_USER.equals(userId)) {
-                            profileItem = new ProfileItem(info, info.loadLabel(pm).toString(),
-                                    mActionHandler);
-                        }
-                    } else {
+                    if (!CrossProfileUtils.isCrossProfileIntentForwarderActivity(info)) {
                         final Item item = new AppItem(info, info.loadLabel(pm).toString(), userId,
                                 mActionHandler);
                         appItems.put(userPackage, item);
                         if (VERBOSE) Log.v(TAG, "Adding handler app: " + item);
                     }
                 }
-            }
-        }
-
-        boolean canShareAcrossProfile = profileItem != null;
-        if (getBaseActivity().getDisplayState().canShareAcrossProfile != canShareAcrossProfile) {
-            getBaseActivity().getDisplayState().canShareAcrossProfile = canShareAcrossProfile;
-            if (!UserId.CURRENT_USER.equals(getBaseActivity().getSelectedUser())) {
-                mActionHandler.loadDocumentsForCurrentStack();
             }
         }
 
@@ -455,28 +510,17 @@ public class RootsFragment extends Fragment {
             }
         }
 
-        if (canShareAcrossProfile && Features.CROSS_PROFILE_TABS) {
-            // Combine lists only if we enabled profile tab feature.
-            rootList.addAll(rootListOtherUser);
-        }
-
-        if (!result.isEmpty() && !rootList.isEmpty()) {
-            result.add(new SpacerItem());
-        }
-
         final String preferredRootPackage = getResources().getString(
                 R.string.preferred_root_package, "");
-
         final ItemComparator comp = new ItemComparator(preferredRootPackage);
         Collections.sort(rootList, comp);
-        result.addAll(rootList);
+        Collections.sort(rootListOtherUser, comp);
 
-        mApplicationItemList = rootList;
-
-        if (canShareAcrossProfile && !Features.CROSS_PROFILE_TABS) {
-            // Add profile item if we don't support cross-profile tab.
-            result.add(new SpacerItem());
-            result.add(profileItem);
+        if (state.supportsCrossProfile() && state.canShareAcrossProfile) {
+            mApplicationItemList.addAll(rootList);
+            mApplicationItemList.addAll(rootListOtherUser);
+        } else {
+            mApplicationItemList.addAll(rootList);
         }
     }
 

@@ -231,8 +231,8 @@ public class AppsRowManagerTest {
 
     @Test
     public void testUpdateView_crossProfileSearch_hideRow() {
-        mState.action = State.ACTION_GET_CONTENT;
-        when(mActivity.isTextSearching()).thenReturn(true);
+        mState.supportsCrossProfile = true;
+        when(mActivity.isSearchExpanded()).thenReturn(true);
 
         mState.stack.changeRoot(TestProvidersAccess.RECENTS);
         final List<Item> rootList = new ArrayList<>();
@@ -252,8 +252,8 @@ public class AppsRowManagerTest {
 
     @Test
     public void testUpdateView_notCrossProfileSearch_showRow() {
-        mState.action = State.ACTION_GET_CONTENT;
-        when(mActivity.isTextSearching()).thenReturn(false);
+        mState.supportsCrossProfile = true;
+        when(mActivity.isSearchExpanded()).thenReturn(false);
 
         mState.stack.changeRoot(TestProvidersAccess.RECENTS);
         final List<Item> rootList = new ArrayList<>();
@@ -273,7 +273,7 @@ public class AppsRowManagerTest {
 
     @Test
     public void testUpdateView_noItemsOnSelectedUser_hideRow() {
-        mState.action = State.ACTION_GET_CONTENT;
+        mState.supportsCrossProfile = true;
         mState.stack.changeRoot(TestProvidersAccess.RECENTS);
         when(mActivity.getSelectedUser()).thenReturn(TestProvidersAccess.OtherUser.USER_ID);
 

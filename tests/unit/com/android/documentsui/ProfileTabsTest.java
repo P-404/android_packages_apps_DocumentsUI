@@ -65,14 +65,14 @@ public class ProfileTabsTest {
         mContext.getTheme().applyStyle(R.style.DocumentsDefaultTheme, false);
         LayoutInflater layoutInflater = LayoutInflater.from(mContext);
         mState = new State();
-        mState.action = State.ACTION_GET_CONTENT;
+        mState.supportsCrossProfile = true;
         mState.stack.changeRoot(TestProvidersAccess.DOWNLOADS);
         mState.stack.push(TestEnv.FOLDER_0);
         View view = layoutInflater.inflate(R.layout.directory_header, null);
 
         mTabLayout = view.findViewById(R.id.tabs);
         mTestEnv = new TestEnvironment();
-        mTestEnv.isTextSearching = false;
+        mTestEnv.isSearchExpanded = false;
 
         mTestUserIdManager = new TestUserIdManager();
         mTestCommonAddons = new TestCommonAddons();
@@ -104,10 +104,10 @@ public class ProfileTabsTest {
     }
 
     @Test
-    public void testUpdateView_twoUsers_browse_shouldHide() {
+    public void testUpdateView_twoUsers_doesNotSupportCrossProfile_shouldHide() {
         initializeWithUsers(systemUser, managedUser);
 
-        mState.action = State.ACTION_BROWSE;
+        mState.supportsCrossProfile = false;
         mProfileTabs.updateView();
 
         assertThat(mTabLayout.getVisibility()).isEqualTo(View.GONE);
@@ -152,7 +152,7 @@ public class ProfileTabsTest {
 
     @Test
     public void testUpdateView_twoUsers_isSearching_shouldHide() {
-        mTestEnv.isTextSearching = true;
+        mTestEnv.isSearchExpanded = true;
         initializeWithUsers(systemUser, managedUser);
 
         assertThat(mTabLayout.getVisibility()).isEqualTo(View.GONE);
@@ -242,7 +242,7 @@ public class ProfileTabsTest {
      */
     private static class TestEnvironment implements NavigationViewManager.Environment {
 
-        public boolean isTextSearching = false;
+        public boolean isSearchExpanded = false;
 
         @Override
         public RootInfo getCurrentRoot() {
@@ -261,14 +261,8 @@ public class ProfileTabsTest {
 
         @Override
         public boolean isSearchExpanded() {
-            throw new UnsupportedOperationException("not implemented");
+            return isSearchExpanded;
         }
-
-        @Override
-        public boolean isTextSearching() {
-            return isTextSearching;
-        }
-
     }
 
     private static class TestCommonAddons implements AbstractActionHandler.CommonAddons {
@@ -322,6 +316,11 @@ public class ProfileTabsTest {
 
         @Override
         public void setRootsDrawerOpen(boolean open) {
+            throw new UnsupportedOperationException("not implemented");
+        }
+
+        @Override
+        public void setRootsDrawerLocked(boolean locked) {
             throw new UnsupportedOperationException("not implemented");
         }
 

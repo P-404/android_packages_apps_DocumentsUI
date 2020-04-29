@@ -497,7 +497,7 @@ public abstract class AbstractActionHandler<T extends FragmentActivity & CommonA
             // First try managing the document; we expect manager to filter
             // based on authority, so we don't grant.
             Intent manage = new Intent(DocumentsContract.ACTION_MANAGE_DOCUMENT);
-            manage.setData(doc.derivedUri);
+            manage.setData(doc.getDocumentUri());
             try {
                 doc.userId.startActivityAsUser(mActivity, manage);
                 return true;
@@ -542,7 +542,7 @@ public abstract class AbstractActionHandler<T extends FragmentActivity & CommonA
 
     protected Intent buildViewIntent(DocumentInfo doc) {
         Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setDataAndType(doc.derivedUri, doc.mimeType);
+        intent.setDataAndType(doc.getDocumentUri(), doc.mimeType);
 
         // Downloads has traditionally added the WRITE permission
         // in the TrampolineActivity. Since this behavior is long
@@ -963,6 +963,11 @@ public abstract class AbstractActionHandler<T extends FragmentActivity & CommonA
          */
         boolean isInRecents();
         void setRootsDrawerOpen(boolean open);
+
+        /**
+         * Set the locked status of the DrawerController.
+         */
+        void setRootsDrawerLocked(boolean locked);
 
         // TODO: Let navigator listens to State
         void updateNavigator();

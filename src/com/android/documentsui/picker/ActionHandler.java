@@ -116,10 +116,6 @@ class ActionHandler<T extends FragmentActivity & Addons> extends AbstractActionH
             return;
         }
 
-        // We set the activity title in AsyncTask.onPostExecute().
-        // To prevent talkback from reading aloud the default title, we clear it here.
-        mActivity.setTitle("");
-
         if (launchHomeForCopyDestination(intent)) {
             if (DEBUG) {
                 Log.d(TAG, "Launching directly into Home directory for copy destination.");
@@ -419,7 +415,7 @@ class ActionHandler<T extends FragmentActivity & Addons> extends AbstractActionH
         if (mFeatures.isOverwriteConfirmationEnabled()) {
             mInjector.dialogs.confirmAction(fm, replaceTarget, ConfirmFragment.TYPE_OVERWRITE);
         } else {
-            finishPicking(replaceTarget.derivedUri);
+            finishPicking(replaceTarget.getDocumentUri());
         }
     }
 
