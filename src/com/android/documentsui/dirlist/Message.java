@@ -21,13 +21,14 @@ import android.app.AuthenticationRequiredException;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
-import android.os.AsyncTask;
 
 import androidx.annotation.Nullable;
 
+import com.android.documentsui.CrossProfileException;
 import com.android.documentsui.CrossProfileNoPermissionException;
 import com.android.documentsui.CrossProfileQuietModeException;
 import com.android.documentsui.DocumentsApplication;
+import com.android.documentsui.Metrics;
 import com.android.documentsui.Model.Update;
 import com.android.documentsui.R;
 import com.android.documentsui.base.RootInfo;
@@ -193,7 +194,9 @@ abstract class Message {
         void update(Update event) {
             reset();
             if (event.hasCrossProfileException()) {
-                if (event.getException() instanceof CrossProfileQuietModeException) {
+                CrossProfileException e = (CrossProfileException) event.getException();
+                Metrics.logCrossProfileEmptyState(e);
+                if (e instanceof CrossProfileQuietModeException) {
                     updateToQuietModeErrorMessage(
                             ((CrossProfileQuietModeException) event.getException()).mUserId);
                 } else if (event.getException() instanceof CrossProfileNoPermissionException) {
@@ -215,14 +218,8 @@ abstract class Message {
             CharSequence buttonText = null;
             if (mCanModifyQuietMode) {
                 buttonText = mEnv.getContext().getResources().getText(R.string.quiet_mode_button);
-                mCallback = () ->
-                        new AsyncTask<Void, Void, Void>() {
-                            @Override
-                            protected Void doInBackground(Void... voids) {
-                                userId.requestQuietModeDisabled(mEnv.getContext());
-                                return null;
-                            }
-                        }.execute();
+                mCallback = () -> mEnv.getActionHandler().requestQuietModeDisabled(
+                        mEnv.getDisplayState().stack.getRoot(), userId);
             }
             update(
                     mEnv.getContext().getResources().getText(R.string.quiet_mode_error_title),

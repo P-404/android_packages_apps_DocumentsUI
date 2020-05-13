@@ -87,9 +87,7 @@ public abstract class AbstractActionHandler<T extends FragmentActivity & CommonA
         implements ActionHandler {
 
     @VisibleForTesting
-    public static final int CODE_FORWARD = 42;
     public static final int CODE_AUTHENTICATION = 43;
-    public static final int CODE_FORWARD_CROSS_PROFILE = 44;
 
     @VisibleForTesting
     static final int LOADER_ID = 42;
@@ -174,6 +172,11 @@ public abstract class AbstractActionHandler<T extends FragmentActivity & CommonA
         } catch (IntentSender.SendIntentException cancelled) {
             Log.d(TAG, "Authentication Pending Intent either canceled or ignored.");
         }
+    }
+
+    @Override
+    public void requestQuietModeDisabled(RootInfo info, UserId userId) {
+        new RequestQuietModeDisabledTask(mActivity, userId).execute();
     }
 
     @Override

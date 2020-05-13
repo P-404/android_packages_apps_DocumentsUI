@@ -24,6 +24,7 @@ import static com.android.documentsui.base.State.MODE_LIST;
 
 import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
+import android.content.ContentProviderClient;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -31,6 +32,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Parcelable;
 import android.os.UserHandle;
 import android.provider.DocumentsContract;
@@ -130,12 +132,18 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
     })
     @Retention(RetentionPolicy.SOURCE)
     public @interface RequestCode {}
+
     public static final int REQUEST_COPY_DESTINATION = 1;
 
     static final String TAG = "DirectoryFragment";
 
     private static final int CACHE_EVICT_LIMIT = 100;
     private static final int REFRESH_SPINNER_TIMEOUT = 500;
+    private static final int PROVIDER_MAX_RETRIES = 10;
+    private static final long PROVIDER_TEST_DELAY = 4000;
+    private static final String ACTION_MEDIA_REMOVED = "android.intent.action.MEDIA_REMOVED";
+    private static final String ACTION_MEDIA_MOUNTED = "android.intent.action.MEDIA_MOUNTED";
+    private static final String ACTION_MEDIA_EJECT = "android.intent.action.MEDIA_EJECT";
 
     private BaseActivity mActivity;
 
@@ -190,6 +198,9 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
 
     private DirectoryState mLocalState;
 
+    private Handler mHandler;
+    private Runnable mProviderTestRunnable;
+
     // Note, we use !null to indicate that selection was restored (from rotation).
     // So don't fiddle with this field unless you've got the bigger picture in mind.
     private @Nullable Bundle mRestoredState;
@@ -225,14 +236,106 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
             final String action = intent.getAction();
             if (isManagedProfileAction(action)) {
                 UserHandle userHandle = intent.getParcelableExtra(Intent.EXTRA_USER);
-                if (Objects.equal(mActivity.getSelectedUser(), UserId.of(userHandle))) {
+                UserId userId = UserId.of(userHandle);
+                if (Objects.equal(mActivity.getSelectedUser(), userId)) {
                     // We only need to refresh the layout when the selected user is equal to the
                     // received profile user.
-                    onRefresh();
+                    if (Intent.ACTION_MANAGED_PROFILE_UNAVAILABLE.equals(action)) {
+                        // If the managed profile is turned off, we need to refresh the directory
+                        // to update the UI to show an appropriate error message.
+                        if (mProviderTestRunnable != null) {
+                            mHandler.removeCallbacks(mProviderTestRunnable);
+                            mProviderTestRunnable = null;
+                        }
+                        onRefresh();
+                        return;
+                    }
+
+                    // When the managed profile becomes available, the provider may not be available
+                    // immediately, we need to check if it is ready before we reload the content.
+                    if (Intent.ACTION_MANAGED_PROFILE_UNLOCKED.equals(action)) {
+                        checkUriAndScheduleCheckIfNeeded(userId);
+                    }
                 }
             }
         }
     };
+
+    private final BroadcastReceiver mSdCardBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            onRefresh();
+        }
+    };
+
+    private IntentFilter getSdCardStateChangeFilter() {
+        IntentFilter sdCardStateChangeFilter = new IntentFilter();
+        sdCardStateChangeFilter.addAction(ACTION_MEDIA_REMOVED);
+        sdCardStateChangeFilter.addAction(ACTION_MEDIA_MOUNTED);
+        sdCardStateChangeFilter.addAction(ACTION_MEDIA_EJECT);
+        sdCardStateChangeFilter.addDataScheme("file");
+        return sdCardStateChangeFilter;
+    }
+
+    private void checkUriAndScheduleCheckIfNeeded(UserId userId) {
+        RootInfo currentRoot = mActivity.getCurrentRoot();
+        DocumentInfo currentDoc = mActivity.getDisplayState().stack.peek();
+        Uri uri = getCurrentUri(currentRoot, currentDoc);
+        if (isProviderAvailable(uri, userId) || mActivity.isInRecents()) {
+            if (mProviderTestRunnable != null) {
+                mHandler.removeCallbacks(mProviderTestRunnable);
+                mProviderTestRunnable = null;
+            }
+            mHandler.post(() -> onRefresh());
+        } else {
+            checkUriWithDelay(/* numOfRetries= */1, uri, userId);
+        }
+    }
+
+    private void checkUriWithDelay(int numOfRetries, Uri uri, UserId userId) {
+        mProviderTestRunnable = () -> {
+            RootInfo currentRoot = mActivity.getCurrentRoot();
+            DocumentInfo currentDoc = mActivity.getDisplayState().stack.peek();
+            if (mActivity.getSelectedUser().equals(userId)
+                    && uri.equals(getCurrentUri(currentRoot, currentDoc))) {
+                if (isProviderAvailable(uri, userId)
+                        || userId.isQuietModeEnabled(mActivity)
+                        || numOfRetries >= PROVIDER_MAX_RETRIES) {
+                    // We stop the recursive check when
+                    // 1. the provider is available
+                    // 2. the profile is in quiet mode, i.e. provider will not be available
+                    // 3. after maximum retries
+                    onRefresh();
+                    mProviderTestRunnable = null;
+                } else {
+                    Log.d(TAG, "Provider is not available. Retry after " + PROVIDER_TEST_DELAY);
+                    checkUriWithDelay(numOfRetries + 1, uri, userId);
+                }
+            }
+        };
+        mHandler.postDelayed(mProviderTestRunnable, PROVIDER_TEST_DELAY);
+    }
+
+    private Uri getCurrentUri(RootInfo root, @Nullable DocumentInfo doc) {
+        String authority = doc == null ? root.authority : doc.authority;
+        String documentId = doc == null ? root.documentId : doc.documentId;
+        return DocumentsContract.buildDocumentUri(authority, documentId);
+    }
+
+    private boolean isProviderAvailable(Uri uri, UserId userId) {
+        try (ContentProviderClient userClient =
+                DocumentsApplication.acquireUnstableProviderOrThrow(
+                        userId.getContentResolver(mActivity), uri.getAuthority())) {
+            Cursor testCursor = userClient.query(uri, /* projection= */ null,
+                    /* queryArgs= */null, /* cancellationSignal= */ null);
+            if (testCursor != null) {
+                return true;
+            }
+        } catch (Exception e) {
+            // Provider is not available. Ignore.
+        }
+        return false;
+    }
 
     private static boolean isManagedProfileAction(String action) {
         return Intent.ACTION_MANAGED_PROFILE_UNLOCKED.equals(action)
@@ -243,6 +346,7 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
     public View onCreateView(
             LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
+        mHandler = new Handler(Looper.getMainLooper());
         mActivity = (BaseActivity) getActivity();
         final View view = inflater.inflate(R.layout.fragment_directory, container, false);
 
@@ -302,7 +406,11 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
         mInjector.actions.unregisterDisplayStateChangedListener(mOnDisplayStateChanged);
         if (mState.supportsCrossProfile()) {
             LocalBroadcastManager.getInstance(mActivity).unregisterReceiver(mReceiver);
+            if (mProviderTestRunnable != null) {
+                mHandler.removeCallbacks(mProviderTestRunnable);
+            }
         }
+        getContext().unregisterReceiver(mSdCardBroadcastReceiver);
 
         // Cancel any outstanding thumbnail requests
         final int count = mRecView.getChildCount();
@@ -449,7 +557,7 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
         // If mDocument is null, we sort it by last modified by default because it's in Recents.
         final boolean prefersLastModified =
                 (mLocalState.mDocument == null)
-                || mLocalState.mDocument.prefersSortByLastModified();
+                        || mLocalState.mDocument.prefersSortByLastModified();
         // Call this before adding the listener to avoid restarting the loader one more time
         mState.sortModel.setDefaultDimension(
                 prefersLastModified
@@ -468,6 +576,7 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
             // roots are updated.
             LocalBroadcastManager.getInstance(mActivity).registerReceiver(mReceiver, filter);
         }
+        getContext().registerReceiver(mSdCardBroadcastReceiver, getSdCardStateChangeFilter());
     }
 
     @Override
@@ -585,6 +694,7 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
 
     /**
      * Updates the layout after the view mode switches.
+     *
      * @param mode The new view mode.
      */
     private void updateLayout(@ViewMode int mode) {
@@ -618,21 +728,26 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
 
     /**
      * Updates the layout after the view mode switches.
+     *
      * @param mode The new view mode.
      */
     private void scaleLayout(float scale) {
         assert DEBUG;
 
-        if (VERBOSE) Log.v(
-                TAG, "Handling scale event: " + scale + ", existing scale: " + mLiveScale);
+        if (VERBOSE) {
+            Log.v(
+                    TAG, "Handling scale event: " + scale + ", existing scale: " + mLiveScale);
+        }
 
         if (mMode == MODE_GRID) {
             float minScale = getFraction(R.fraction.grid_scale_min);
             float maxScale = getFraction(R.fraction.grid_scale_max);
             float nextScale = mLiveScale * scale;
 
-            if (VERBOSE) Log.v(TAG,
-                    "Next scale " + nextScale + ", Min/max scale " + minScale + "/" + maxScale);
+            if (VERBOSE) {
+                Log.v(TAG,
+                        "Next scale " + nextScale + ", Min/max scale " + minScale + "/" + maxScale);
+            }
 
             if (nextScale > minScale && nextScale < maxScale) {
                 if (DEBUG) {
@@ -779,7 +894,7 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
                         ? mActivity.getCurrentDirectory()
                         : mModel.getDocuments(selection).get(0);
 
-                        mActions.showInspector(doc);
+                mActions.showInspector(doc);
                 return true;
 
             case R.id.dir_menu_cut_to_clipboard:
@@ -839,7 +954,7 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
         } else {
             DocumentHolder holder = getDocumentHolder(child);
             mActions.openItem(holder.getItemDetails(), ActionHandler.VIEW_TYPE_PREVIEW,
-                ActionHandler.VIEW_TYPE_REGULAR);
+                    ActionHandler.VIEW_TYPE_REGULAR);
         }
         return true;
     }
@@ -1017,7 +1132,7 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
         RenameDocumentFragment.show(getChildFragmentManager(), docs.get(0));
     }
 
-    Model getModel(){
+    Model getModel() {
         return mModel;
     }
 
@@ -1083,9 +1198,10 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
 
     /**
      * Gets the model ID for a given RecyclerView item.
+     *
      * @param view A View that is a document item view, or a child of a document item view.
      * @return The Model ID for the given document, or null if the given view is not associated with
-     *     a document item view.
+     * a document item view.
      */
     private @Nullable String getModelId(View view) {
         View itemView = mRecView.findContainingItemView(view);
@@ -1107,8 +1223,8 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
     }
 
     /**
-    * Add or remove mToolbarPreDrawListener implement on DirectoryFragment to ViewTreeObserver.
-    */
+     * Add or remove mToolbarPreDrawListener implement on DirectoryFragment to ViewTreeObserver.
+     */
     public void setPreDrawListenerEnabled(boolean enable) {
         if (mActivity == null) {
             return;
@@ -1163,6 +1279,7 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
         ft.commitAllowingStateLoss();
     }
 
+    /** Gets the fragment from the fragment manager. */
     public static @Nullable DirectoryFragment get(FragmentManager fm) {
         // TODO: deal with multiple directories shown at once
         Fragment fragment = fm.findFragmentById(getFragmentId());
@@ -1176,7 +1293,7 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
     }
 
     /**
-     *  Scroll to top of recyclerView in fragment
+     * Scroll to top of recyclerView in fragment
      */
     public void scrollToTop() {
         if (mRecView != null) {
@@ -1185,7 +1302,7 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
     }
 
     /**
-     *  Stop the scroll of recyclerView in fragment
+     * Stop the scroll of recyclerView in fragment
      */
     public void stopScroll() {
         if (mRecView != null) {
@@ -1206,7 +1323,7 @@ public class DirectoryFragment extends Fragment implements SwipeRefreshLayout.On
         }
 
         final DocumentInfo doc = mActivity.getCurrentDirectory();
-        if (doc == null) {
+        if (doc == null && !mActivity.getSelectedUser().isQuietModeEnabled(mActivity)) {
             // If there is no root doc, try to reload the root doc from root info.
             Log.w(TAG, "No root document. Try to get root document.");
             getRootDocumentAndMaybeRefreshDocument();

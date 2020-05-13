@@ -40,7 +40,7 @@
     <string name="menu_select" msgid="1366061076507142387">"ಆಯ್ಕೆಮಾಡಿ"</string>
     <string name="menu_sort" msgid="3362419226163725275">"ಹೀಗೆ ವಿಂಗಡಿಸಿ..."</string>
     <string name="menu_copy" msgid="7404820171352314754">"ಇದಕ್ಕೆ ನಕಲಿಸಿ…"</string>
-    <string name="menu_move" msgid="2310760789561129882">"ಇದಕ್ಕೆ ಸರಿಸು…"</string>
+    <string name="menu_move" msgid="2310760789561129882">"ಇದಕ್ಕೆ ಸರಿಸಿ…"</string>
     <string name="menu_compress" msgid="37539111904724188">"ಕುಗ್ಗಿಸಿ"</string>
     <string name="menu_extract" msgid="8171946945982532262">"ಇದಕ್ಕೆ ಬೇರ್ಪಡಿಸಲಾಗಿದೆ…"</string>
     <string name="menu_rename" msgid="1883113442688817554">"ಮರುಹೆಸರಿಸು"</string>
@@ -48,13 +48,13 @@
     <string name="menu_view_in_owner" msgid="7228948660557554770">"<xliff:g id="SOURCE">%1$s</xliff:g> ನಲ್ಲಿ ವೀಕ್ಷಿಸಿ"</string>
     <string name="menu_new_window" msgid="2947837751796109126">"ಹೊಸ ವಿಂಡೋ"</string>
     <string name="menu_cut_to_clipboard" msgid="2878752142015026229">"ಕತ್ತರಿಸು"</string>
-    <string name="menu_copy_to_clipboard" msgid="5064081159073330776">"ನಕಲಿಸು"</string>
+    <string name="menu_copy_to_clipboard" msgid="5064081159073330776">"ನಕಲಿಸಿ"</string>
     <string name="menu_paste_from_clipboard" msgid="360947260414135827">"ಅಂಟಿಸು"</string>
     <string name="menu_paste_into_folder" msgid="8000644546983240101">"ಫೋಲ್ಡರ್‌ಗೆ ನಕಲಿಸಿ"</string>
     <string name="menu_advanced_show" msgid="7558626506462906726">"ಆಂತರಿಕ ಸಂಗ್ರಹಣೆ ತೋರಿಸು"</string>
     <string name="menu_advanced_hide" msgid="6488381508009246334">"ಆಂತರಿಕ ಸಂಗ್ರಹಣೆಯನ್ನು ಮರೆಮಾಡಿ"</string>
     <string name="button_select" msgid="240863497069321364">"ಆಯ್ಕೆಮಾಡಿ"</string>
-    <string name="button_copy" msgid="8219059853840996027">"ನಕಲಿಸು"</string>
+    <string name="button_copy" msgid="8219059853840996027">"ನಕಲಿಸಿ"</string>
     <string name="button_compress" msgid="8951561310857223966">"ಕುಗ್ಗಿಸಿ"</string>
     <string name="button_extract" msgid="1038674453689912247">"ಬೇರ್ಪಡಿಸಿ"</string>
     <string name="button_move" msgid="8596460499325291272">"ಸರಿಸು"</string>
@@ -268,10 +268,8 @@
     <string name="open_tree_button" msgid="6402871398424497776">"ಈ ಫೋಲ್ಡರ್ ಬಳಸಿ"</string>
     <string name="open_tree_dialog_title" msgid="6339509533852318569">"<xliff:g id="DIRECTORY">%2$s</xliff:g> ನಲ್ಲಿರುವ ಫೈಲ್‌ಗಳಿಗೆ ಪ್ರವೇಶಿಸಲು <xliff:g id="APPNAME">%1$s</xliff:g> ಆ್ಯಪ್‌ಗೆ ಅನುಮತಿಸಬೇಕೆ?"</string>
     <string name="open_tree_dialog_message" msgid="4120695398430659628">"ಇದು ಪ್ರಸ್ತುತ ಮತ್ತು ಭವಿಷ್ಯದಲ್ಲಿ <xliff:g id="DIRECTORY">%2$s</xliff:g> ನಲ್ಲಿ ಸಂಗ್ರಹವಾಗಿರುವ ವಿಷಯವನ್ನು ಪ್ರವೇಶಿಸಲು <xliff:g id="APPNAME">%1$s</xliff:g> ಆ್ಯಪ್‌ಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
-    <!-- no translation found for directory_blocked_header_title (1164584889578740066) -->
-    <skip />
-    <!-- no translation found for directory_blocked_header_subtitle (2829150911849033408) -->
-    <skip />
+    <string name="directory_blocked_header_title" msgid="1164584889578740066">"ಈ ಫೋಲ್ಡರ್ ಅನ್ನು ಬಳಸಲು ಸಾಧ್ಯವಿಲ್ಲ"</string>
+    <string name="directory_blocked_header_subtitle" msgid="2829150911849033408">"ನಿಮ್ಮ ಗೌಪ್ಯತೆಯನ್ನು ಕಾಪಾಡಲು, ಬೇರೊಂದು ಫೋಲ್ಡರ್ ಅನ್ನು ಆಯ್ಕೆಮಾಡಿ"</string>
     <string name="create_new_folder_button" msgid="8859613309559794890">"ಹೊಸ ಫೋಲ್ಡರ್ ರಚಿಸಿ"</string>
     <string name="search_bar_hint" msgid="4517366509897977321">"ಈ ಫೋನ್‍ನಲ್ಲಿ ಹುಡುಕಿ"</string>
     <string name="delete_search_history" msgid="2202015025607694515">"ಹುಡುಕಾಟ ಇತಿಹಾಸವನ್ನು ಅಳಿಸಿ <xliff:g id="TEXT">%1$s</xliff:g>"</string>

@@ -20,6 +20,7 @@ import static com.android.documentsui.base.Shared.EXTRA_BENCHMARK;
 import static com.android.documentsui.base.SharedMinimal.DEBUG;
 import static com.android.documentsui.base.State.MODE_GRID;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -129,7 +130,7 @@ public abstract class BaseActivity
 
     @CallSuper
     @Override
-    public void onCreate(Bundle icicle) {
+    public void onCreate(Bundle savedInstanceState) {
         // Record the time when onCreate is invoked for metric.
         mStartTime = new Date().getTime();
 
@@ -138,7 +139,7 @@ public abstract class BaseActivity
         // in case Activity continueusly encounter resource not found exception
         getTheme().applyStyle(R.style.DocumentsDefaultTheme, false);
 
-        super.onCreate(icicle);
+        super.onCreate(savedInstanceState);
 
         final Intent intent = getIntent();
 
@@ -149,7 +150,7 @@ public abstract class BaseActivity
         setContainer();
 
         mInjector = getInjector();
-        mState = getState(icicle);
+        mState = getState(savedInstanceState);
         mDrawer = DrawerController.create(this, mInjector.config);
         Metrics.logActivityLaunch(mState, intent);
 
@@ -174,6 +175,10 @@ public abstract class BaseActivity
              */
             @Override
             public void onSearchChanged(@Nullable String query) {
+                if (query != null) {
+                    SearchFragment.dismissFragmentNextFrame(getSupportFragmentManager());
+                }
+
                 if (mSearchManager.isSearching()) {
                     Metrics.logSearchMode(query != null, mSearchManager.hasCheckedChip());
                     if (mInjector.pickResult != null) {
@@ -226,6 +231,8 @@ public abstract class BaseActivity
                         && !isInitailSearch) {
                     SearchFragment.showFragment(getSupportFragmentManager(),
                             mSearchManager.getSearchViewText());
+                } else {
+                    SearchFragment.dismissFragmentNextFrame(getSupportFragmentManager());
                 }
             }
 
@@ -256,14 +263,14 @@ public abstract class BaseActivity
         ViewGroup chipGroup = findViewById(R.id.search_chip_group);
         mUserIdManager = DocumentsApplication.getUserIdManager(this);
         mSearchManager = new SearchViewManager(searchListener, queryInterceptor,
-                chipGroup, icicle);
+                chipGroup, savedInstanceState);
         // initialize the chip sets by accept mime types
         mSearchManager.initChipSets(mState.acceptMimes);
         // update the chip items by the mime types of the root
         mSearchManager.updateChips(getCurrentRoot().derivedMimeTypes);
         // parse the query content from intent when launch the
         // activity at the first time
-        if (icicle == null) {
+        if (savedInstanceState == null) {
             mHasQueryContentFromIntent = mSearchManager.parseQueryContentFromIntent(getIntent(),
                     mState.action);
         }
@@ -343,19 +350,6 @@ public abstract class BaseActivity
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
-        if (mState.stack.getTitle() == null) {
-            // First launch.
-            setTitle("");
-            return;
-        }
-
-        // Append app name for TalkBack when app enters foreground.
-        setTitle(String.format("%s. %s", getString(R.string.files_label), mState.stack.getTitle()));
-    }
-
-    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         boolean showMenu = super.onCreateOptionsMenu(menu);
 
@@ -393,9 +387,9 @@ public abstract class BaseActivity
         super.onDestroy();
     }
 
-    private State getState(@Nullable Bundle icicle) {
-        if (icicle != null) {
-            State state = icicle.<State>getParcelable(Shared.EXTRA_STATE);
+    private State getState(@Nullable Bundle savedInstanceState) {
+        if (savedInstanceState != null) {
+            State state = savedInstanceState.<State>getParcelable(Shared.EXTRA_STATE);
             if (DEBUG) {
                 Log.d(mTag, "Recovered existing state object: " + state);
             }
@@ -410,6 +404,11 @@ public abstract class BaseActivity
         state.localOnly = intent.getBooleanExtra(Intent.EXTRA_LOCAL_ONLY, false);
         state.excludedAuthorities = getExcludedAuthorities();
         state.restrictScopeStorage = Shared.shouldRestrictStorageAccessFramework(this);
+        state.showHiddenFiles = LocalPreferences.getShowHiddenFiles(
+                getApplicationContext(),
+                getApplicationContext()
+                        .getResources()
+                        .getBoolean(R.bool.show_hidden_files_by_default));
 
         includeState(state);
 
@@ -531,6 +530,10 @@ public abstract class BaseActivity
                 getInjector().actions.switchLauncherIcon();
                 return true;
 
+            case R.id.option_menu_show_hidden_files:
+                onClickedShowHiddenFiles();
+                return true;
+
             case R.id.sub_menu_grid:
                 setViewMode(State.MODE_GRID);
                 return true;
@@ -592,12 +595,6 @@ public abstract class BaseActivity
      */
     @Override
     public final void refreshCurrentRootAndDirectory(int anim) {
-        // The following call will crash if it's called before onCreateOptionMenu() is called in
-        // which we install menu item to search view manager, and there is a search query we need to
-        // restore. This happens when we're still initializing our UI so we shouldn't cancel the
-        // search which will be restored later in onCreateOptionMenu(). Try finding a way to guard
-        // refreshCurrentRootAndDirectory() from being called while we're restoring the state of UI
-        // from the saved state passed in onCreate().
         mSearchManager.cancelSearch();
 
         // only set the query content in the first launch
@@ -617,13 +614,17 @@ public abstract class BaseActivity
             roots.onCurrentRootChanged();
         }
 
-        // Causes talkback to announce the activity's new title
         String appName = getString(R.string.files_label);
-        if (getTitle().toString().isEmpty()) {
+        String currentTitle = getTitle() != null ? getTitle().toString() : "";
+        if (currentTitle.equals(appName)) {
             // First launch, TalkBack announces app name.
-            setTitle(String.format("%s. %s", appName, mState.stack.getTitle()));
-        } else {
-            setTitle(mState.stack.getTitle());
+            getWindow().getDecorView().announceForAccessibility(appName);
+        }
+
+        String newTitle = mState.stack.getTitle();
+        if (newTitle != null) {
+            // Causes talkback to announce the activity's new title
+            setTitle(newTitle);
         }
 
         invalidateOptionsMenu();
@@ -656,6 +657,23 @@ public abstract class BaseActivity
 
     public State getDisplayState() {
         return mState;
+    }
+
+    /**
+     * Updates hidden files visibility based on user action.
+     */
+    private void onClickedShowHiddenFiles() {
+        boolean showHiddenFiles = !mState.showHiddenFiles;
+        Context context = getApplicationContext();
+
+        Metrics.logUserAction(showHiddenFiles
+                ? MetricConsts.USER_ACTION_SHOW_HIDDEN_FILES
+                : MetricConsts.USER_ACTION_HIDE_HIDDEN_FILES);
+        LocalPreferences.setShowHiddenFiles(context, showHiddenFiles);
+        mState.showHiddenFiles = showHiddenFiles;
+
+        // Calls this to trigger either MultiRootDocumentsLoader or DirectoryLoader reloading.
+        mInjector.actions.loadDocumentsForCurrentStack();
     }
 
     /**

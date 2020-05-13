@@ -91,19 +91,10 @@
             android:theme="@style/DocumentsTheme">
         </activity>
 
-        <activity
-            android:name=".ForResultForwarderActivity"
-            android:theme="@android:style/Theme.NoDisplay"
-            android:excludeFromRecents="true"
-            android:finishOnCloseSystemDialogs="true"
-            android:exported="false">
-        </activity>
-
         <!--  Preserve original launcher activity from Nougat. -->
         <activity-alias
             android:name=".LauncherActivity"
             android:targetActivity=".files.LauncherActivity"
-            android:enabled="@bool/is_launcher_enabled"
             android:label="@string/launcher_label"
             android:icon="@drawable/launcher_icon" >
             <intent-filter>
