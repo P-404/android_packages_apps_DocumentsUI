@@ -93,7 +93,7 @@
     <string name="quiet_mode_error_title" msgid="9126656325282792843">"El perfil de trabajo está pausado"</string>
     <string name="quiet_mode_button" msgid="6977115032320235420">"Activar"</string>
     <string name="cant_select_work_files_error_title" msgid="6688716319549644354">"No se pueden seleccionar archivos de trabajo"</string>
-    <string name="cant_select_work_files_error_message" msgid="683480676150690641">"Tu administrador de TI no te permite acceder a los archivos de trabajo desde la app personal"</string>
+    <string name="cant_select_work_files_error_message" msgid="683480676150690641">"Tu administrador de TI no te permite acceder a archivos de trabajo desde una app personal"</string>
     <string name="cant_select_personal_files_error_title" msgid="3200697170148617742">"No se pueden seleccionar archivos personales"</string>
     <string name="cant_select_personal_files_error_message" msgid="4105905035459118209">"Tu administrador de TI no te permite acceder a los archivos personales desde una app de trabajo"</string>
     <string name="cant_save_to_work_error_title" msgid="1351323070040641358">"No se puede guardar en el perfil de trabajo"</string>
@@ -276,7 +276,7 @@
     <string name="search_bar_hint" msgid="4517366509897977321">"Buscar en este teléfono"</string>
     <string name="delete_search_history" msgid="2202015025607694515">"Borrar historial de búsqueda de <xliff:g id="TEXT">%1$s</xliff:g>"</string>
     <string name="personal_tab" msgid="3878576287868528503">"Personal"</string>
-    <string name="work_tab" msgid="7265359366883747413">"Trabajo"</string>
+    <string name="work_tab" msgid="7265359366883747413">"De trabajo"</string>
     <string name="a11y_work" msgid="7504431382825242153">"Trabajo"</string>
     <string name="drag_from_another_app" msgid="8310249276199969905">"No puedes transferir archivos de otra app."</string>
 </resources>
