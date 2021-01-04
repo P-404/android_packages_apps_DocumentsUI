@@ -196,7 +196,7 @@
       <item quantity="one"><xliff:g id="COUNT_0">%1$d</xliff:g> elementu kopiatu da arbelean.</item>
     </plurals>
     <string name="file_operation_rejected" msgid="4301554203329008794">"Ez da onartzen hori egitea fitxategiarekin."</string>
-    <string name="file_operation_error" msgid="2234357335716533795">"Ezin da egin hori fitxategiarekin."</string>
+    <string name="file_operation_error" msgid="2234357335716533795">"Ezin izan da egin hori fitxategiarekin."</string>
     <string name="rename_error" msgid="6700093173508118635">"Ezin izan zaio aldatu izena dokumentuari"</string>
     <string name="menu_eject_root" msgid="9215040039374893613">"Atera"</string>
     <string name="notification_copy_files_converted_title" msgid="6916768494891833365">"Artxibo batzuk bihurtu dira"</string>
@@ -278,4 +278,6 @@
     <string name="work_tab" msgid="7265359366883747413">"Lanekoa"</string>
     <string name="a11y_work" msgid="7504431382825242153">"Lana"</string>
     <string name="drag_from_another_app" msgid="8310249276199969905">"Ezin dituzu mugitu beste aplikazio batzuetako fitxategiak."</string>
+    <string name="grid_mode_showing" msgid="2803166871485028508">"Sareta moduan ikusgai."</string>
+    <string name="list_mode_showing" msgid="1225413902295895166">"Zerrenda moduan ikusgai."</string>
 </resources>
