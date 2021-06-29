@@ -46,7 +46,7 @@ public class ThemeUiTest extends ThemeUiTestBase {
     }
 
     @Test
-    public void themeNightModeDisable_actionBarColorShouldBeLight() throws Exception {
+    public void themeNightModeDisable_actionBarColorShouldBeLight() {
         assumeFalse(VersionUtils.isAtLeastS()); // Disable for S dynamic color
         assertTheme(R.styleable.ThemeColor, R.styleable.ThemeColor_android_colorBackground,
                 Color.WHITE);
@@ -65,28 +65,28 @@ public class ThemeUiTest extends ThemeUiTestBase {
     }
 
     @Test
-    public void themeNightModeDisable_navigationBarColorShouldBeLight() throws Exception {
+    public void themeNightModeDisable_navigationBarColorShouldBeLight() {
         assumeFalse(VersionUtils.isAtLeastS()); // Disable for S dynamic color
         assertTheme(R.styleable.SystemWindow, R.styleable.SystemWindow_android_navigationBarColor,
                 Color.WHITE);
     }
 
     @Test
-    public void themeNightModeDisable_windowBackgroundColorShouldBeLight() throws Exception {
+    public void themeNightModeDisable_windowBackgroundColorShouldBeLight() {
         assumeFalse(VersionUtils.isAtLeastS()); // Disable for S dynamic color
         assertTheme(R.styleable.SystemWindow, R.styleable.SystemWindow_android_windowBackground,
                 Color.WHITE);
     }
 
     @Test
-    public void themeNightModeDisable_statusBarColorShouldBeLight() throws Exception {
+    public void themeNightModeDisable_statusBarColorShouldBeLight() {
         assumeFalse(VersionUtils.isAtLeastS()); // Disable for S dynamic color
         assertTheme(R.styleable.SystemWindow, R.styleable.SystemWindow_android_statusBarColor,
                 Color.WHITE);
     }
 
     @Test
-    public void appCompatThemeNightModeDisable_colorPrimaryShouldBeThemeable() throws Exception {
+    public void appCompatThemeNightModeDisable_colorPrimaryShouldBeThemeable() {
         assumeFalse(VersionUtils.isAtLeastS()); // Disable for S dynamic color
         assertTheme(R.styleable.ThemeColor, R.styleable.ThemeColor_android_colorPrimary,
                 mTheme.getResources().getColor(com.android.documentsui.R.color.primary, mTheme));

@@ -49,7 +49,7 @@ public class DarkThemeUiTest extends ThemeUiTestBase {
     }
 
     @Test
-    public void themeNightModeEnable_actionBarColorShouldBeDark() throws Exception {
+    public void themeNightModeEnable_actionBarColorShouldBeDark() {
         assumeFalse(VersionUtils.isAtLeastS()); // Disable for S dynamic color
         assertTheme(R.styleable.ThemeColor, R.styleable.ThemeColor_android_colorBackground,
                 mTheme.getResources().getColor(com.android.documentsui.R.color.app_background_color,
@@ -75,7 +75,7 @@ public class DarkThemeUiTest extends ThemeUiTestBase {
     }
 
     @Test
-    public void themeNightModeEnable_windowBackgroundColorShouldBeDark() throws Exception {
+    public void themeNightModeEnable_windowBackgroundColorShouldBeDark() {
         assumeFalse(VersionUtils.isAtLeastS()); // Disable for S dynamic color
         assertTheme(R.styleable.SystemWindow, R.styleable.SystemWindow_android_windowBackground,
                 mTheme.getResources().getColor(com.android.documentsui.R.color.app_background_color,
@@ -83,7 +83,7 @@ public class DarkThemeUiTest extends ThemeUiTestBase {
     }
 
     @Test
-    public void themeNightModeEnable_statusBarColorShouldBeDark() throws Exception {
+    public void themeNightModeEnable_statusBarColorShouldBeDark() {
         assumeFalse(VersionUtils.isAtLeastS()); // Disable for S dynamic color
         assertTheme(R.styleable.SystemWindow, R.styleable.SystemWindow_android_statusBarColor,
                 mTheme.getResources().getColor(com.android.documentsui.R.color.app_background_color,
@@ -91,7 +91,7 @@ public class DarkThemeUiTest extends ThemeUiTestBase {
     }
 
     @Test
-    public void appCompatThemeNightModeEnable_colorPrimaryShouldBeThemeable() throws Exception {
+    public void appCompatThemeNightModeEnable_colorPrimaryShouldBeThemeable() {
         assumeFalse(VersionUtils.isAtLeastS()); // Disable for S dynamic color
         assertTheme(R.styleable.ThemeColor, R.styleable.ThemeColor_android_colorPrimary,
                 mTheme.getResources().getColor(com.android.documentsui.R.color.primary, mTheme));
