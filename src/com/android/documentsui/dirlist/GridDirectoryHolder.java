@@ -101,8 +101,7 @@ final class GridDirectoryHolder extends DocumentHolder {
 
     @Override
     public boolean inSelectRegion(MotionEvent event) {
-        return mAction == State.ACTION_BROWSE ? Views.isEventOver(event, itemView.getParent(),
-                mIconLayout) : false;
+        return mAction == State.ACTION_BROWSE ? Views.isEventOver(event, mIconLayout) : false;
     }
 
     /**
